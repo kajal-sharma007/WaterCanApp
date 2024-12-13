@@ -126,6 +126,7 @@ import {
           <View style={styles.buttonContainer}>
             <CommonButton
               title='Next'
+              onPress={()=>navigation.navigate('TabNav')}
             />
             <View style={styles.separatorContainer}>
               <View style={styles.separator} />
