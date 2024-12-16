@@ -119,6 +119,37 @@ import {
         }).start();
       }
     };
+
+    // Handle API request to verify driver
+    const verifyDriver = async () => {
+      try {
+          const response = await fetch('http://192.168.1.6:9000/api/verify-driver', { // Replace with your IP
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ mobileNo: phoneNumber }), // Send phoneNumber as MobileNo
+          });
+  
+          if (!response.ok) {
+              // Log status and body for more details
+              const errorData = await response.json();
+              console.error('Error response:', errorData);
+              alert(errorData.message || 'Verification failed');
+              return;
+          }
+  
+          const data = await response.json();
+          const driverId = data.driver._id;
+          console.log('Driver verified:', data);
+          navigation.navigate('TabNav',{ driverId }); // Proceed to the next screen
+      } catch (error) {
+          console.error('Network error:', error);
+          alert('An error occurred. Please try again later.');
+      }
+  };
+  
+
   
     // Handle text input change
     const handleChange = text => {
@@ -196,7 +227,7 @@ import {
             <View style={styles.buttonContainer}>
               <GreenButton
                 title='Next'
-                onPress={()=>navigation.navigate('TabNav')}
+                onPress={verifyDriver}
               />
               <View style={styles.separatorContainer}>
                 <View style={styles.separator} />
