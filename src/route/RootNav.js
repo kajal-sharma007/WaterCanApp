@@ -8,6 +8,7 @@ import Home from '../Screens/Dashboard/Home';
 import Route from '../Screens/Dashboard/Route';
 import AddCustomer from '../Screens/Dashboard/AddCustomer';
 import Profile from '../Screens/Dashboard/Profile';
+import RouteDetails from '../Screens/Dashboard/RouteDetails';
 
 
 const Stack = createStackNavigator();
@@ -24,6 +25,7 @@ const RootNav = () => {
       <Stack.Screen name="Route" component={Route} />
       <Stack.Screen name="AddCustomer" component={AddCustomer} />
       <Stack.Screen name="Profile" component={Profile} />
+      <Stack.Screen name="RouteDetails" component={RouteDetails} />
     </Stack.Navigator>
   );
 };
