@@ -1,24 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
-import edit from '../../assets/Svg/edit.png';
+import { Picker } from '@react-native-picker/picker';
+import { launchImageLibrary } from 'react-native-image-picker'; // Import the image picker
 import exit from '../../assets/Svg/exit.png';
 import user from '../../assets/Svg/user.png';
 
 const Profile = ({ route, navigation }) => {
-  const { driverId } = route.params; // Assuming driverId is passed via navigation
+  const { driverId } = route.params;
   
   const [deliveryMan, setDeliveryMan] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [selectedVehicle, setSelectedVehicle] = useState('Motorcycle');
+  const [profileImage, setProfileImage] = useState(null); // State for profile image
 
   useEffect(() => {
-    console.log('Driver ID Profile :', driverId); // Log the driverId to confirm it is valid
+    console.log('Driver ID Profile :', driverId);
   }, [driverId]);
 
-  // Fetch profile data on component mount
   useEffect(() => {
     const fetchProfileData = async () => {
       try {
-        const response = await fetch(`http://192.168.1.6:9000/api/driver/${driverId}`);
+        const response = await fetch(`http://192.168.1.5:9000/api/driver/${driverId}`);
         if (!response.ok) {
           throw new Error('Profile not found');
         }
@@ -44,14 +46,23 @@ const Profile = ({ route, navigation }) => {
         throw new Error('Logout failed');
       }
 
-      // On successful logout, navigate to the login screen or main screen
       alert('You have logged out successfully.');
-      navigation.navigate('Onboarding'); // Change 'Login' to the appropriate screen name
-
+      navigation.navigate('Onboarding');
     } catch (error) {
       console.error('Error during logout:', error);
       alert('Error logging out. Please try again.');
     }
+  };
+
+  // Function to handle image selection
+  const selectProfileImage = () => {
+    launchImageLibrary({ mediaType: 'photo', quality: 0.7 }, (response) => {
+      if (response.assets && response.assets.length > 0) {
+        setProfileImage(response.assets[0].uri); // Set the selected image URI
+      } else {
+        console.log('User cancelled image picker');
+      }
+    });
   };
 
   if (loading) {
@@ -73,25 +84,37 @@ const Profile = ({ route, navigation }) => {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
-        <Image source={user} style={styles.profileImage} />
+        <TouchableOpacity onPress={selectProfileImage}>
+          <Image
+            source={profileImage ? { uri: profileImage } : user} // Use selected image or default image
+            style={styles.profileImage}
+          />
+        </TouchableOpacity>
         <Text style={styles.name}>{deliveryMan.name}</Text>
-        {/* <Text style={styles.rating}>Rating: {deliveryMan.rating} ★</Text> */}
+        <Text style={styles.rating}>{deliveryMan.email}</Text>
       </View>
 
       <View style={styles.details}>
         <Text style={styles.detailTitle}>Contact Information</Text>
+        <Text style={styles.detailText}>Name: {deliveryMan.name}</Text>
         <Text style={styles.detailText}>Phone: {deliveryMan.mobileNo}</Text>
         <Text style={styles.detailText}>Email: {deliveryMan.email}</Text>
         
-        <Text style={styles.detailTitle}>Vehicle</Text>
-        <Text style={styles.detailText}>Vehicle: Motorcycle</Text>
+        <Text style={styles.detailTitle1}>Vehicle</Text>
+        <View style={styles.pickerContainer}>
+          <Picker
+            selectedValue={selectedVehicle}
+            style={styles.picker}
+            onValueChange={(itemValue) => setSelectedVehicle(itemValue)}
+          >
+            <Picker.Item label="Motorcycle" value="Motorcycle" />
+            <Picker.Item label="Car" value="Car" />
+            <Picker.Item label="Bicycle" value="Bicycle" />
+          </Picker>
+        </View>
       </View>
 
       <View style={styles.footer}>
-        <TouchableOpacity style={styles.button}>
-          <Image source={edit} style={styles.Image} />
-          <Text style={styles.buttonText}>Edit Profile</Text>
-        </TouchableOpacity>
         <TouchableOpacity style={styles.button1} onPress={handleLogout}>
           <Image source={exit} style={styles.Image} />
           <Text style={styles.buttonText}>Logout</Text>
@@ -104,7 +127,7 @@ const Profile = ({ route, navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#fff',
   },
   loaderContainer: {
     flex: 1,
@@ -134,37 +157,44 @@ const styles = StyleSheet.create({
   details: {
     backgroundColor: '#fff',
     padding: 20,
-    marginTop: 20,
-    borderTopLeftRadius: 15,
-    borderTopRightRadius: 15,
+    marginTop: 5,
   },
   detailTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#333',
-    marginBottom: 10,
+    marginBottom: 15,
+  },
+  detailTitle1: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+    marginTop: 15,
   },
   detailText: {
     fontSize: 16,
-    color: '#666',
+    color: '#15837d',
+    fontWeight:'bold',
     marginBottom: 8,
+  },
+  pickerContainer: {
+    height: 60,
+    borderWidth: 1,
+    borderColor: '#15837d',
+    borderRadius: 20, // Border radius applied to the container
+    overflow: 'hidden', // This ensures the border radius works
+    backgroundColor: '#a2d9d4', // Background color for the picker container
+    marginTop:10,
+  },
+  picker: {
+    height: '100%', // Ensures the Picker takes up the full height of the container
+    width: '100%',
   },
   footer: {
     padding: 20,
-    marginTop: 30,
-    backgroundColor: '#fff',
+    marginTop: 50,
     borderBottomLeftRadius: 15,
     borderBottomRightRadius: 15,
-  },
-  button: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#20B2AA',
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    borderRadius: 10,
-    marginBottom: 15,
-    justifyContent: 'center',
   },
   button1: {
     flexDirection: 'row',
