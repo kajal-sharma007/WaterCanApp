@@ -1,165 +1,75 @@
-// screens/RouteScreen.js
-import React, { useState } from 'react';
-import { View, Text, FlatList, StyleSheet, Button, Image } from 'react-native';
-import MapView, { Marker, Polyline } from 'react-native-maps';
-import { Picker } from '@react-native-picker/picker';
+import React, {useState, useEffect} from 'react';
+import {View, Text, StyleSheet, Alert} from 'react-native';
+import MapView from 'react-native-maps';
 
 const Route = () => {
-  const [selectedRoute, setSelectedRoute] = useState(null);
+  const [mapError, setMapError] = useState(null);
 
-  // Static list of routes
-  const routes = [
-    { label: 'Route 1', value: 'route1' },
-    { label: 'Route 2', value: 'route2' },
-    { label: 'Route 3', value: 'route3' }
-  ];
-
-  // Data for different routes
-  const routeData = {
-    route1: [
-      { id: '1', title: 'Start', latitude: 26.9124, longitude: 75.7873 },
-      { id: '2', title: 'Stop 1', latitude: 26.9144, longitude: 75.7893 },
-      { id: '3', title: 'Stop 2', latitude: 26.9164, longitude: 75.7913 },
-      { id: '4', title: 'End', latitude: 26.9184, longitude: 75.7933 }
-    ],
-    route2: [
-      { id: '1', title: 'Start', latitude: 26.9124, longitude: 75.7853 },
-      { id: '2', title: 'Stop 1', latitude: 26.9144, longitude: 75.7873 },
-      { id: '3', title: 'Stop 2', latitude: 26.9164, longitude: 75.7893 },
-      { id: '4', title: 'End', latitude: 26.9184, longitude: 75.7913 }
-    ],
-    route3: [
-      { id: '1', title: 'Start', latitude: 26.9134, longitude: 75.7863 },
-      { id: '2', title: 'Stop 1', latitude: 26.9154, longitude: 75.7883 },
-      { id: '3', title: 'Stop 2', latitude: 26.9174, longitude: 75.7903 },
-      { id: '4', title: 'End', latitude: 26.9194, longitude: 75.7923 }
-    ]
-  };
-
-  // Handle route selection
-  const handleRouteSelect = (value) => {
-    setSelectedRoute(value);
-  };
-
-  // Get the selected route data
-  const currentRouteData = selectedRoute ? routeData[selectedRoute] : [];
-
-  // Ensure the map does not crash by providing fallback values
-  const initialRegion = currentRouteData.length > 0 
-    ? {
-        latitude: currentRouteData[0]?.latitude || 26.9124,
-        longitude: currentRouteData[0]?.longitude || 75.7873,
-        latitudeDelta: 0.05,
-        longitudeDelta: 0.05
+  useEffect(() => {
+    // Here we can handle any side effects or initialization
+    const checkMapPermissions = async () => {
+      try {
+        // Example of an asynchronous task that might fail (e.g., location permission)
+        // For now, we simulate potential errors
+        // You can add your own permission request logic if needed
+        throw new Error('Failed to load the map.'); // Simulated error
+      } catch (error) {
+        setMapError(error.message);
+        Alert.alert('Map Error', error.message);
       }
-    : {
-        latitude: 26.9124,
-        longitude: 75.7873,
-        latitudeDelta: 0.05,
-        longitudeDelta: 0.05
-      };
+    };
 
-  const renderItem = ({ item }) => (
-    <View style={styles.item}>
-      <Text>{item.title}</Text>
-    </View>
-  );
+    checkMapPermissions();
+  }, []);
+
+  if (mapError) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>Error: {mapError}</Text>
+      </View>
+    );
+  }
 
   return (
-    <View style={{ flex: 1 }}>
-      <View style={styles.dropdownContainer}>
-        <Picker
-          selectedValue={selectedRoute}
-          onValueChange={handleRouteSelect}
-          style={styles.picker}
-        >
-          <Picker.Item label="Select a Route..." value={null} />
-          {routes.map((route) => (
-            <Picker.Item key={route.value} label={route.label} value={route.value} />
-          ))}
-        </Picker>
-      </View>
-
-      {selectedRoute && (
-        <>
-          <MapView
-            style={{ flex: 1 }}
-            initialRegion={initialRegion}
-          >
-            {currentRouteData.map((stop) => (
-              <Marker
-                key={stop.id}
-                coordinate={{ latitude: stop.latitude, longitude: stop.longitude }}
-              >
-                <Text>{stop.title}</Text>
-              </Marker>
-            ))}
-            <Polyline
-              coordinates={currentRouteData.map((stop) => ({
-                latitude: stop.latitude,
-                longitude: stop.longitude
-              }))}
-              strokeColor="#000"
-              strokeWidth={3}
-            />
-          </MapView>
-        </>
-      )}
-
-      {!selectedRoute && (
-        <View style={styles.staticMapContainer}>
-          <Image
-            source={{
-              uri: 'https://maps.googleapis.com/maps/api/staticmap?center=Jaipur&zoom=12&size=600x300&markers=color:red%7C26.9124,75.7873&key=YOUR_GOOGLE_MAPS_API_KEY'
-            }}
-            style={styles.staticMap}
-          />
-        </View>
-      )}
-
-      <View style={styles.listContainer}>
-        <FlatList
-          data={currentRouteData}
-          renderItem={renderItem}
-          keyExtractor={(item) => item.id}
-        />
-        {selectedRoute && <Button title="Start Delivery" onPress={() => alert('Delivery started!')} />}
-      </View>
+    <View style={styles.container}>
+      <MapView
+        style={styles.map}
+        initialRegion={{
+          latitude: 37.78825,
+          longitude: -122.4324,
+          latitudeDelta: 0.0922,
+          longitudeDelta: 0.0421,
+        }}
+        onError={e => {
+          // Handle map error if one occurs during runtime
+          setMapError('Failed to load the map. Please try again later.');
+          Alert.alert(
+            'Map Error',
+            'Failed to load the map. Please try again later.',
+          );
+        }}
+      />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  dropdownContainer: {
-    padding: 10,
-    backgroundColor: '#fff',
+  container: {
+    flex: 1,
   },
-  picker: {
-    height: 50,
-    width: '100%',
+  map: {
+    ...StyleSheet.absoluteFillObject,
   },
-  staticMapContainer: {
-    alignItems: 'center',
+  errorContainer: {
+    flex: 1,
     justifyContent: 'center',
-    marginTop: 10,
-    marginBottom: 20,
+    alignItems: 'center',
+    backgroundColor: '#f8d7da',
   },
-  staticMap: {
-    width: '100%',
-    height: 200,
+  errorText: {
+    color: '#721c24',
+    fontSize: 18,
   },
-  listContainer: {
-    position: 'absolute',
-    bottom: 0,
-    width: '100%',
-    backgroundColor: 'white',
-    padding: 10
-  },
-  item: {
-    padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ddd'
-  }
 });
 
 export default Route;
