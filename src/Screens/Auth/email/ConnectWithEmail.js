@@ -102,7 +102,7 @@ const ConnectWithEmail = () => {
       console.log('Login Request Data:', {email, password: Password});
 
       const response = await fetch(
-        'http://192.168.1.6:9000/api/verify-driver',
+        'http://192.168.1.3:9000/api/verify-driver',
         {
           method: 'POST',
           headers: {
