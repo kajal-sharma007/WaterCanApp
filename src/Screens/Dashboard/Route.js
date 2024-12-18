@@ -8,10 +8,11 @@ import {
 } from 'react-native';
 import MapView, {Marker} from 'react-native-maps';
 import MapViewDirections from 'react-native-maps-directions';
-import {YOUR_GOOGLE_MAPS_API_KEY} from '../constants';
+import {YOUR_GOOGLE_MAPS_API_KEY} from '../constants/constants';
 import imagePath from '../constants/imagePath';
 import {Text} from 'react-native-svg';
-
+import GetLocation from 'react-native-get-location';
+import {getCurrentPosition} from 'react-native-geolocation-service';
 
 const Route = () => {
   const [state, setState] = useState({
@@ -22,8 +23,8 @@ const Route = () => {
       longitudeDelta: 0.0421,
     },
     dropCords: {
-      latitude: 26.8932,
-      longitude: 75.7982,
+      latitude: 26.8505,
+      longitude: 75.7628,
       latitudeDelta: 0.0922,
       longitudeDelta: 0.0421,
     },
@@ -33,8 +34,31 @@ const Route = () => {
 
   const {pickupCords, dropCords} = state;
 
-
   useEffect(() => {
+    // Get the current location of the user
+    GetLocation.getCurrentPosition({
+      enableHighAccuracy: true,
+      timeout: 5000,
+      maximumAge: 10000,
+    })
+      .then(location => {
+        // Update the pickupCords state with the current location
+        setState(prevState => ({
+          ...prevState,
+          pickupCords: {
+            latitude: location.latitude,
+            longitude: location.longitude,
+            latitudeDelta: 0.0922,
+            longitudeDelta: 0.0421,
+          },
+        }));
+        console.log(location.latitude, location.longitude);
+      })
+      .catch(error => {
+        const {code, message} = error;
+        console.warn(code, message);
+      });
+
     // Validate coordinates on load
     if (
       !pickupCords ||
@@ -50,10 +74,7 @@ const Route = () => {
       );
       return;
     }
-
-    console.log('Pickup Coordinates:', pickupCords);
-    console.log('Drop Coordinates:', dropCords);
-  }, [pickupCords, dropCords]);
+  }, [dropCords, pickupCords]); // Empty dependency array ensures this runs once on component mount
 
   const handleError = error => {
     console.error('Error loading map or directions:', error);
@@ -81,9 +102,6 @@ const Route = () => {
             longitudeDelta: 0.0421,
           }}
           showsUserLocation={true}
-          onRegionChangeComplete={region =>
-            console.log('Current region:', region)
-          }
           ref={mapRef} // Attach the ref to the MapView component
         >
           {/* Markers for pickup and drop locations */}
@@ -103,8 +121,9 @@ const Route = () => {
             origin={pickupCords}
             destination={dropCords}
             apikey={YOUR_GOOGLE_MAPS_API_KEY}
-            strokeColor="hotpink"
+            strokeColor="blue"
             strokeWidth={4}
+            showsUserLocation={false}
             onError={handleError}
             onReady={result => {
               console.log('Directions Ready', result);
@@ -114,12 +133,7 @@ const Route = () => {
           />
         </MapView>
       </View>
-      <View style={styles.bottomCard}>
-        <Text>Where are you going..?</Text>
-        <TouchableOpacity style={styles.inpuStyle}>
-          <Text>Choose your location</Text>
-        </TouchableOpacity>
-      </View>
+     
     </SafeAreaView>
   );
 };
