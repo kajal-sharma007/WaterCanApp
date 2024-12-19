@@ -4,7 +4,8 @@ import { Picker } from '@react-native-picker/picker';
 import { launchImageLibrary } from 'react-native-image-picker'; // Import the image picker
 import exit from '../../assets/Svg/exit.png';
 import user from '../../assets/Svg/user.png';
-
+import camera from '../../assets/Svg/camera.png';
+import Icon from 'react-native-vector-icons/FontAwesome';
 const Profile = ({ route, navigation }) => {
   const { driverId } = route.params;
   
@@ -38,7 +39,7 @@ const Profile = ({ route, navigation }) => {
 
   const handleLogout = async () => {
     try {
-      const response = await fetch(`http://192.168.1.6:9000/api/delete-driver/${driverId}`, {
+      const response = await fetch(`http://192.168.1.5:9000/api/delete-driver/${driverId}`, {
         method: 'DELETE',
       });
       
@@ -89,6 +90,7 @@ const Profile = ({ route, navigation }) => {
             source={profileImage ? { uri: profileImage } : user} // Use selected image or default image
             style={styles.profileImage}
           />
+          <Image source={camera} style={styles.cameraIcon}/>
         </TouchableOpacity>
         <Text style={styles.name}>{deliveryMan.name}</Text>
         <Text style={styles.rating}>{deliveryMan.email}</Text>
@@ -137,7 +139,7 @@ const styles = StyleSheet.create({
   header: {
     alignItems: 'center',
     backgroundColor: '#20B2AA',
-    paddingVertical: 40,
+    paddingVertical: 20,
   },
   profileImage: {
     width: 120,
@@ -221,6 +223,13 @@ const styles = StyleSheet.create({
     color: '#DC143C',
     textAlign: 'center',
     marginTop: 20,
+  },
+  cameraIcon: {
+    position: 'relative',
+    bottom: 60,
+    left: 80,
+    height:50,
+    width:50
   },
 });
 
