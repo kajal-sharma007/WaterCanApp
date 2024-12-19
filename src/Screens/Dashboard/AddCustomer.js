@@ -9,9 +9,15 @@ import {
   TouchableOpacity,
   Modal,
   FlatList,
-} from "react-native";
+  Platform,
+  SafeAreaView,
+  KeyboardAvoidingView,
+  ScrollView,
+} from 'react-native';
 import Geolocation from '@react-native-community/geolocation';
 import { Picker } from '@react-native-picker/picker';
+import { WIFI } from "../constants/constants";
+
 
 const AddCustomer = ({ route }) => {
   const [customerName, setCustomerName] = useState("");
@@ -36,7 +42,7 @@ const AddCustomer = ({ route }) => {
   useEffect(() => {
     const fetchRoutes = async () => {
       try {
-        const response = await fetch(`http://192.168.1.5:9000/api/route/${driverId}`);
+        const response = await fetch(`http://${WIFI}/api/route/${driverId}`);
         const data = await response.json();
         console.log("Fetched route:", data); // Log the full response to inspect the structure
 
@@ -75,19 +81,23 @@ const AddCustomer = ({ route }) => {
   useEffect(() => {
     const fetchAdminOptions = async () => {
       try {
-        const response = await fetch(`http://192.168.1.5:9000/api/get-all-admin-assigned/to/${driverId}`);
+        const response = await fetch(
+          `http://${WIFI}/api/get-all-admin-assigned/to/${driverId}`,
+        );
         if (!response.ok) {
-          throw new Error(`Failed to fetch admin options, status: ${response.status}`);
+          throw new Error(
+            `Failed to fetch admin options, status: ${response.status}`,
+          );
         }
         const data = await response.json();
         setAdminOptions(data.users);
       } catch (error) {
-        console.error("Error fetching admin options:", error);
+        console.error('Error fetching admin options:', error);
         Alert.alert('Error', 'Failed to fetch admin options: ' + error.message);
       }
     };
     fetchAdminOptions();
-  }, []);
+  }, [driverId]);
 
   const handleSubmit = async () => {
     if (!customerName || !mobileNo || !address || !email || !selectedRouteId) {
@@ -108,7 +118,7 @@ const AddCustomer = ({ route }) => {
 
     try {
       const response = await fetch(
-        `http://192.168.1.5:9000/api/customers/to/${selectedAdmin}`,
+        `http://${WIFI}/api/customers/to/${selectedAdmin}`,
         {
           method: "POST",
           headers: {
@@ -152,108 +162,109 @@ const AddCustomer = ({ route }) => {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>CUSTOMER INFORMATION</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Customer Name"
-        value={customerName}
-        onChangeText={setCustomerName}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Mobile No"
-        value={mobileNo}
-        onChangeText={setMobileNo}
-        keyboardType="numeric"
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Address"
-        value={address}
-        onChangeText={setAddress}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Email ID"
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-      />
-
-      <Text style={styles.dropdownLabel}>Select Admin:</Text>
-      <View style={styles.pickerContainer}>
-        <Picker
-          selectedValue={selectedAdmin}
-          style={styles.picker}
-          onValueChange={(item) => setSelectedAdmin(item)} // Set selected route ID
-        >
-          <Picker.Item label="Select admin" value={null} />
-          {Array.isArray(adminOptions) && adminOptions.length > 0 ? (
-            adminOptions.map((item) => (
-              <Picker.Item
-                key={item._id}
-                label={item.name}
-                value={item._id}
-              />
-            ))
-          ) : (
-            <Picker.Item label="No admin available" value={null} />
-          )}
-        </Picker>
-      </View>
-
-      <Text style={styles.dropdownLabel}>Select Route:</Text>
-      <View style={styles.pickerContainer}>
-        <Picker
-          selectedValue={selectedRouteId}
-          style={styles.picker}
-          onValueChange={(itemValue) => setSelectedRouteId(itemValue)} // Set selected route ID
-        >
-          <Picker.Item label="Select a route" value={null} />
-          {Array.isArray(adminRoutes) && adminRoutes.length > 0 ? (
-            adminRoutes.map((route) => (
-              <Picker.Item
-                key={route.id}
-                label={route.name}
-                value={route.id}
-              />
-            ))
-          ) : (
-            <Picker.Item label="No routes available" value={null} />
-          )}
-        </Picker>
-      </View>
-
-      <View style={styles.footer}>
-        <TouchableOpacity style={styles.button1} onPress={handleSubmit}>
-          <Text style={styles.buttonText}>Add Customer</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Success Modal */}
-      <Modal
-        visible={successAddedCustomer}
-        animationType="fade"
-        transparent={true}
-        onRequestClose={() => setSuccessAddedCustomer(false)}
+   <SafeAreaView style={{ flex: 1 }}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalText}>Customer Added Successfully!</Text>
-            {/* <Button title="Close" onPress={() => setSuccessAddedCustomer(false)} /> */}
+        <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+          <View style={styles.container}>
+            <Text style={styles.title}>CUSTOMER INFORMATION</Text>
+            
+            <TextInput
+              style={styles.input}
+              placeholder="Customer Name"
+              value={customerName}
+              onChangeText={setCustomerName}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Mobile No"
+              value={mobileNo}
+              onChangeText={setMobileNo}
+              keyboardType="numeric"
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Address"
+              value={address}
+              onChangeText={setAddress}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Email ID"
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+            />
+  
+            <Text style={styles.dropdownLabel}>Select Admin:</Text>
+            <View style={styles.pickerContainer}>
+              <Picker
+                selectedValue={selectedAdmin}
+                style={styles.picker}
+                onValueChange={(item) => setSelectedAdmin(item)}
+              >
+                <Picker.Item label="Select admin" value={null} />
+                {Array.isArray(adminOptions) && adminOptions.length > 0 ? (
+                  adminOptions.map((item) => (
+                    <Picker.Item key={item._id} label={item.name} value={item._id} />
+                  ))
+                ) : (
+                  <Picker.Item label="No admin available" value={null} />
+                )}
+              </Picker>
+            </View>
+  
+            <Text style={styles.dropdownLabel}>Select Route:</Text>
+            <View style={styles.pickerContainer}>
+              <Picker
+                selectedValue={selectedRouteId}
+                style={styles.picker}
+                onValueChange={(itemValue) => setSelectedRouteId(itemValue)}
+              >
+                <Picker.Item label="Select a route" value={null} />
+                {Array.isArray(adminRoutes) && adminRoutes.length > 0 ? (
+                  adminRoutes.map((route) => (
+                    <Picker.Item key={route.id} label={route.name} value={route.id} />
+                  ))
+                ) : (
+                  <Picker.Item label="No routes available" value={null} />
+                )}
+              </Picker>
+            </View>
+  
+            <View style={styles.footer}>
+              <TouchableOpacity style={styles.button1} onPress={handleSubmit}>
+                <Text style={styles.buttonText}>Add Customer</Text>
+              </TouchableOpacity>
+            </View>
+  
+            {/* Success Modal */}
+            <Modal
+              visible={successAddedCustomer}
+              animationType="fade"
+              transparent={true}
+              onRequestClose={() => setSuccessAddedCustomer(false)}
+            >
+              <View style={styles.modalOverlay}>
+                <View style={styles.modalContent}>
+                  <Text style={styles.modalText}>Customer Added Successfully!</Text>
+                </View>
+              </View>
+            </Modal>
+  
+            {notifyErr && (
+              <View style={styles.error}>
+                <Text style={styles.errorText}>
+                  {`Customer with ${email} already existed, try with a different Email Id.`}
+                </Text>
+              </View>
+            )}
           </View>
-        </View>
-      </Modal>
-
-      {notifyErr && (
-        <View style={styles.error}>
-          <Text style={styles.errorText}>
-            {`Customer with ${email} already existed, try with a different Email Id.`}
-          </Text>
-        </View>
-      )}
-    </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 

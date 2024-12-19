@@ -6,6 +6,9 @@ import exit from '../../assets/Svg/exit.png';
 import user from '../../assets/Svg/user.png';
 import camera from '../../assets/Svg/camera.png';
 import Icon from 'react-native-vector-icons/FontAwesome';
+import { WIFI } from '../constants/constants';
+
+
 const Profile = ({ route, navigation }) => {
   const { driverId } = route.params;
   
@@ -21,7 +24,7 @@ const Profile = ({ route, navigation }) => {
   useEffect(() => {
     const fetchProfileData = async () => {
       try {
-        const response = await fetch(`http://192.168.1.5:9000/api/driver/${driverId}`);
+        const response = await fetch(`http://${WIFI}/api/driver/${driverId}`);
         if (!response.ok) {
           throw new Error('Profile not found');
         }
@@ -39,7 +42,7 @@ const Profile = ({ route, navigation }) => {
 
   const handleLogout = async () => {
     try {
-      const response = await fetch(`http://192.168.1.5:9000/api/delete-driver/${driverId}`, {
+      const response = await fetch(`http://${WIFI}/api/delete-driver/${driverId}`, {
         method: 'DELETE',
       });
       

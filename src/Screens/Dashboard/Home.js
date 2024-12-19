@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, TouchableOpacity, Modal, StyleSheet, ActivityIndicator } from 'react-native';
+import { WIFI } from '../constants/constants';
 
 const Home = ({ navigation, route }) => {
   const [routes, setRoutes] = useState([]);
@@ -19,7 +20,7 @@ const Home = ({ navigation, route }) => {
       try {
         setLoading(true);
         setError(null);
-        const response = await fetch(`http://192.168.1.10:9000/api/route/${driverId}`);
+        const response = await fetch(`http://${WIFI}/api/route/${driverId}`);
         const data = await response.json();
         console.log("Fetched data:", data);  // Log the entire fetched data to inspect the structure
 

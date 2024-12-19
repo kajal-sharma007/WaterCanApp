@@ -1,21 +1,28 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import React, {useEffect, useState} from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ActivityIndicator,
+} from 'react-native';
+import {useNavigation} from '@react-navigation/native';
+import {WIFI} from '../constants/constants';
 
-const RouteDetails = ({ route }) => {
+const RouteDetails = ({route}) => {
   const [routeDetails, setRouteDetails] = useState(null); // State to store the route details from API
   const [loading, setLoading] = useState(true); // State to track loading status
   const [error, setError] = useState(null); // State to track errors
   const navigation = useNavigation();
-  const { driverId } = route.params;
+  const {driverId} = route.params;
 
   useEffect(() => {
     // Fetch route details from the API
     const fetchRouteDetails = async () => {
       try {
-        const response = await fetch(`http://192.168.1.5:9000/api/getroute/${driverId}`);
+        const response = await fetch(`http://${WIFI}/api/getroute/${driverId}`);
         if (!response.ok) {
-          throw new Error('Failed to fetch route details'); 
+          throw new Error('Failed to fetch route details');
         }
         const data = await response.json();
         setRouteDetails(data); // Save the data from the API
@@ -51,9 +58,11 @@ const RouteDetails = ({ route }) => {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Route Details</Text>
-      
+
       {/* Render details for each customer in the route */}
-      {routeDetails && routeDetails.customers && routeDetails.customers.length > 0 ? (
+      {routeDetails &&
+      routeDetails.customers &&
+      routeDetails.customers.length > 0 ? (
         routeDetails.customers.map((customer, index) => (
           <View key={index} style={styles.customerContainer}>
             <Text style={styles.customerTitle}>Customer: {customer.name}</Text>
@@ -72,7 +81,9 @@ const RouteDetails = ({ route }) => {
         </View>
       )}
 
-      <TouchableOpacity style={styles.button} onPress={() => navigation.goBack()}>
+      <TouchableOpacity
+        style={styles.button}
+        onPress={() => navigation.goBack()}>
         <Text style={styles.buttonText}>Close</Text>
       </TouchableOpacity>
     </View>

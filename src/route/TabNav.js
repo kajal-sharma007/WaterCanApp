@@ -1,6 +1,12 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Image } from 'react-native';
+import {
+  SafeAreaView,
+  KeyboardAvoidingView,
+  Platform,
+  View,
+  Image,
+} from 'react-native';
 import Home from '../Screens/Dashboard/Home';
 import Profile from '../Screens/Dashboard/Profile';
 import Route from '../Screens/Dashboard/Route';
@@ -33,7 +39,7 @@ const TabNavigator = ({ route }) => {
           width: '100%',
           elevation: 10,
           shadowColor: '#000',
-          shadowOffset: { width: 0, height: 2 },
+          shadowOffset: {width: 0, height: 2},
           shadowOpacity: 0.2,
           shadowRadius: 25,
           borderColor: '#f2f2f2',
@@ -43,59 +49,55 @@ const TabNavigator = ({ route }) => {
           fontSize: 12,
           fontWeight: '500',
         },
-      }}
-    >
+      }}>
       <Tab.Screen
         name="Home"
         component={Home}
-        initialParams={{ driverId }} // Pass driverId to the Home screen
+        initialParams={{driverId}} // Pass driverId to the Home screen
         options={{
           tabBarIcon: () => (
             <Image
               source={house}
-              style={{ width: 20, height: 20 }} // Standardized icon size
+              style={{width: 20, height: 20}} // Standardized icon size
             />
           ),
         }}
       />
-
       <Tab.Screen
         name="Route"
         component={Route}
-        initialParams={{ driverId }} // Pass driverId to the Route screen
+        initialParams={{driverId}} // Pass driverId to the Route screen
         options={{
           tabBarIcon: () => (
             <Image
               source={delivery}
-              style={{ width: 21, height: 20.5 }} // Standardized icon size
+              style={{width: 21, height: 20.5}} // Standardized icon size
             />
           ),
         }}
       />
-
       <Tab.Screen
         name="Add Customer"
         component={AddCustomer}
-        initialParams={{ driverId }} // Pass driverId to the AddCustomer screen
+        initialParams={{driverId}} // Pass driverId to the AddCustomer screen
         options={{
           tabBarIcon: () => (
             <Image
               source={queue}
-              style={{ width: 18, height: 20 }} // Standardized icon size
+              style={{width: 18, height: 20}} // Standardized icon size
             />
           ),
         }}
       />
-
       <Tab.Screen
         name="Profile"
         component={Profile}
-        initialParams={{ driverId }} // Pass driverId to the Profile screen
+        initialParams={{driverId}} // Pass driverId to the Profile screen
         options={{
           tabBarIcon: () => (
             <Image
               source={user}
-              style={{ width: 18, height: 20 }} // Standardized icon size
+              style={{width: 18, height: 20}} // Standardized icon size
             />
           ),
         }}

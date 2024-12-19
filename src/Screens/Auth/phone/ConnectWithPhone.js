@@ -18,6 +18,7 @@ import logo from '../../../assets/logo1.jpg';
 import Email from '../../../assets/Svg/Email';
 import {useNavigation} from '@react-navigation/native';
 import PhoneStyle from './PhoneStyle';
+import { WIFI } from '../../constants/constants';
 
 const {width, height} = Dimensions.get('window');
 
@@ -85,12 +86,13 @@ const ConnectWithPhone = () => {
       keyboardDidShowListener.remove();
     };
   }, []);
+console.log(WIFI);
 
 
   const verifyDriver = async () => {
     try {
       const response = await fetch(
-        'http://192.168.1.10:9000/api/verify-driver',
+        `http://${WIFI}/api/verify-driver`,
         {
           method: 'POST',
           headers: {
