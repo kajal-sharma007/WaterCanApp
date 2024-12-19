@@ -90,7 +90,7 @@ const ConnectWithPhone = () => {
   const verifyDriver = async () => {
     try {
       const response = await fetch(
-        'http://192.168.1.4:9000/api/verify-driver',
+        'http://192.168.1.10:9000/api/verify-driver',
         {
           method: 'POST',
           headers: {

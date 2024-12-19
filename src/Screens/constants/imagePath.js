@@ -3,4 +3,5 @@ export default {
   icGreenMarker: require('../../assets/images/greenMarker.png'),
   greenIndicator: require('../../assets/images/greenIndicator.png'),
   icBike: require('../../assets/images/bike.png'),
+  locationmarker: require('../../assets/images/location.png')
 };
