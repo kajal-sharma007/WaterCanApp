@@ -3,20 +3,20 @@ import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'rea
 import { useNavigation } from '@react-navigation/native';
 import Styles from './Styles';
 
-const RouteDetails = ({ route }) => {
+const RouteDetails = ({route}) => {
   const [routeDetails, setRouteDetails] = useState(null); // State to store the route details from API
   const [loading, setLoading] = useState(true); // State to track loading status
   const [error, setError] = useState(null); // State to track errors
   const navigation = useNavigation();
-  const { driverId } = route.params;
+  const {driverId} = route.params;
 
   useEffect(() => {
     // Fetch route details from the API
     const fetchRouteDetails = async () => {
       try {
-        const response = await fetch(`http://192.168.1.5:9000/api/getroute/${driverId}`);
+        const response = await fetch(`http://${WIFI}/api/getroute/${driverId}`);
         if (!response.ok) {
-          throw new Error('Failed to fetch route details'); 
+          throw new Error('Failed to fetch route details');
         }
         const data = await response.json();
         setRouteDetails(data); // Save the data from the API
@@ -54,7 +54,9 @@ const RouteDetails = ({ route }) => {
       <Text style={Styles.title}>Route Details</Text>
       
       {/* Render details for each customer in the route */}
-      {routeDetails && routeDetails.customers && routeDetails.customers.length > 0 ? (
+      {routeDetails &&
+      routeDetails.customers &&
+      routeDetails.customers.length > 0 ? (
         routeDetails.customers.map((customer, index) => (
           <View key={index} style={Styles.customerContainer}>
             <Text style={Styles.customerTitle}>Customer: {customer.name}</Text>

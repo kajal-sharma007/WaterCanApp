@@ -69,12 +69,14 @@ const AddCustomer = ({ route }) => {
       try {
         const response = await fetch(`http://192.168.1.2:9000/api/get-all-admin-assigned/to/${driverId}`);
         if (!response.ok) {
-          throw new Error(`Failed to fetch admin options, status: ${response.status}`);
+          throw new Error(
+            `Failed to fetch admin options, status: ${response.status}`,
+          );
         }
         const data = await response.json();
         setAdminOptions(data.users);
       } catch (error) {
-        console.error("Error fetching admin options:", error);
+        console.error('Error fetching admin options:', error);
         Alert.alert('Error', 'Failed to fetch admin options: ' + error.message);
       }
     };

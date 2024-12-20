@@ -18,6 +18,7 @@ import logo from '../../../assets/logo1.jpg';
 import Email from '../../../assets/Svg/Email';
 import {useNavigation} from '@react-navigation/native';
 import PhoneStyle from './PhoneStyle';
+import { WIFI } from '../../constants/constants';
 
 const {width, height} = Dimensions.get('window');
 
@@ -55,6 +56,17 @@ const CustomButton = ({icon: Icon, title, onPress}) => {
       </View>
     </TouchableOpacity>
   );
+};
+
+const handlePhoneChange = (input) => {
+  // Allow only numeric characters
+  const numericInput = input.replace(/[^0-9]/g, '');
+  setPhoneNumber(numericInput);
+
+  // Clear the error message when exactly 10 digits are entered
+  if (numericInput.length === 10) {
+    setPhoneError('');
+  }
 };
 
 // Green Button Component
@@ -118,7 +130,7 @@ const ConnectWithPhone = () => {
 
     try {
       const response = await fetch(
-        'http://192.168.1.2:9000/api/verify-driver',
+        `http://${WIFI}/api/verify-driver`,
         {
           method: 'POST',
           headers: {
