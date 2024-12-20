@@ -58,16 +58,7 @@ const CustomButton = ({icon: Icon, title, onPress}) => {
   );
 };
 
-const handlePhoneChange = (input) => {
-  // Allow only numeric characters
-  const numericInput = input.replace(/[^0-9]/g, '');
-  setPhoneNumber(numericInput);
 
-  // Clear the error message when exactly 10 digits are entered
-  if (numericInput.length === 10) {
-    setPhoneError('');
-  }
-};
 
 // Green Button Component
 const GreenButton = ({title, onPress}) => {

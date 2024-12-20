@@ -5,6 +5,7 @@ import {
   Alert,
   SafeAreaView,
   TouchableOpacity,
+  Image,
 } from 'react-native';
 import MapView, {Marker} from 'react-native-maps';
 import MapViewDirections from 'react-native-maps-directions';
@@ -22,42 +23,15 @@ const Route = () => {
       longitudeDelta: 0.0421,
     },
     dropCords: [
-      {
-        latitude: 26.8505,
-        longitude: 75.7628,
-      },
-      {
-        latitude: 26.9124,
-        longitude: 75.7873,
-      },
-      {
-        latitude: 27.1751,
-        longitude: 78.0421,
-      },
-      {
-        latitude: 28.6139,
-        longitude: 77.209,
-      },
-      {
-        latitude: 19.076,
-        longitude: 72.8777,
-      },
-      {
-        latitude: 22.5726,
-        longitude: 88.3639,
-      },
-      {
-        latitude: 30.7333,
-        longitude: 76.7794,
-      },
-      {
-        latitude: 12.9716,
-        longitude: 77.5946,
-      },
-      {
-        latitude: 21.1702,
-        longitude: 72.8311,
-      },
+      {latitude: 26.8505, longitude: 75.7628},
+      {latitude: 26.9124, longitude: 75.7873},
+      {latitude: 26.1751, longitude: 75.0421},
+      {latitude: 26.6139, longitude: 75.209},
+      {latitude: 26.076, longitude: 75.8777},
+      {latitude: 26.5726, longitude: 75.3639},
+      {latitude: 26.7333, longitude: 75.7794},
+      {latitude: 26.9716, longitude: 75.5946},
+      {latitude: 26.1702, longitude: 75.8311},
     ],
     selectedDropIndex: null, // Track which drop point is selected
   });
@@ -74,7 +48,6 @@ const Route = () => {
       maximumAge: 10000,
     })
       .then(location => {
-        // Update the pickupCords state with the current location
         setState(prevState => ({
           ...prevState,
           pickupCords: {
@@ -130,6 +103,12 @@ const Route = () => {
     }));
   };
 
+  // Resize the marker images
+  const resizeMarker = (source, width, height) => {
+    const sourceImage = Image.resolveAssetSource(source);
+    return {uri: sourceImage.uri, width, height};
+  };
+
   return (
     <SafeAreaView style={{flex: 1}}>
       <View style={{flex: 1}}>
@@ -147,14 +126,14 @@ const Route = () => {
           <Marker
             coordinate={pickupCords}
             title="Pickup"
-            image={imagePath.icBike}
+            image={resizeMarker(imagePath.icBike, 30, 30)} // Resized marker
           />
           {dropCords.map((drop, index) => (
             <Marker
               key={index}
               coordinate={drop}
               title={`Drop ${index + 1}`}
-              image={imagePath.locationmarker}
+              image={resizeMarker(imagePath.locationmarker, 30, 30)} // Resized marker
               onPress={() => handleMarkerPress(index)} // Handle marker press
             />
           ))}

@@ -84,7 +84,7 @@ const TabNavigator = ({ route }) => {
           tabBarIcon: () => (
             <Image
               source={queue}
-              style={{width: 18, height: 20}} // Standardized icon size
+              style={{width: 25, height: 20}} // Standardized icon size
             />
           ),
         }}
@@ -97,7 +97,7 @@ const TabNavigator = ({ route }) => {
           tabBarIcon: () => (
             <Image
               source={user}
-              style={{width: 18, height: 20}} // Standardized icon size
+              style={{width: 20, height: 20}} // Standardized icon size
             />
           ),
         }}
