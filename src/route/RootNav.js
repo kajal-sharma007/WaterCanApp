@@ -4,11 +4,11 @@ import Onboarding from '../Screens/Onboarding/Onboarding';
 import ConnectWithPhone from '../Screens/Auth/phone/ConnectWithPhone';
 import ConnectWithEmail from '../Screens/Auth/email/ConnectWithEmail';
 import TabNav from './TabNav';
-import Home from '../Screens/Dashboard/Home';
-import Route from '../Screens/Dashboard/Route';
-import AddCustomer from '../Screens/Dashboard/AddCustomer';
-import Profile from '../Screens/Dashboard/Profile';
-import RouteDetails from '../Screens/Dashboard/RouteDetails';
+import Home from '../Screens/Dashboard/Home/Home';
+import Route from '../Screens/Dashboard/Route/Route';
+import AddCustomer from '../Screens/Dashboard/AddCustomer/AddCustomer';
+import Profile from '../Screens/Dashboard/Profile/Profile';
+import RouteDetails from '../Screens/Dashboard/RouteDetails/RouteDetails';
 
 
 const Stack = createStackNavigator();

@@ -1,10 +1,10 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Image } from 'react-native';
-import Home from '../Screens/Dashboard/Home';
-import Profile from '../Screens/Dashboard/Profile';
-import Route from '../Screens/Dashboard/Route';
-import AddCustomer from '../Screens/Dashboard/AddCustomer';
+import Home from '../Screens/Dashboard/Home/Home';
+import Profile from '../Screens/Dashboard/Profile/Profile';
+import Route from '../Screens/Dashboard/Route/Route';
+import AddCustomer from '../Screens/Dashboard/AddCustomer/AddCustomer';
 import house from '../assets/Svg/house.png';
 import delivery from '../assets/Svg/delivery.png';
 import queue from '../assets/Svg/queue.png';

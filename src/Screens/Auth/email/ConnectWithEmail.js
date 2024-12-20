@@ -34,9 +34,7 @@ const FloatingLabelInput = ({
 
   return (
     <View style={styles.floatingLabelContainer}>
-      <Text style={[styles.floatingLabel, {top: isFocused || value ? -2 : 19}]}>
-        {label}
-      </Text>
+      <Text style={[styles.floatingLabel, {top: isFocused || value ? -2 : 19}]}>{label}</Text>
       <View style={styles.inputWrapper}>
         <TextInput
           style={styles.input}
@@ -97,7 +95,19 @@ const ConnectWithEmail = () => {
     };
   }, []);
 
+  // Validate email format
+  const validateEmail = (email) => {
+    const emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
+    return emailPattern.test(email);
+  };
+
   const handleLogin = async () => {
+    // Check if email is valid
+    if (!validateEmail(email)) {
+      Alert.alert('Invalid Email', 'Please enter a valid email address.');
+      return;
+    }
+
     try {
       console.log('Login Request Data:', {email, password: Password});
 

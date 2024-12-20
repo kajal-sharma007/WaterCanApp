@@ -8,8 +8,8 @@ import {
 } from 'react-native';
 import MapView, {Marker} from 'react-native-maps';
 import MapViewDirections from 'react-native-maps-directions';
-import {YOUR_GOOGLE_MAPS_API_KEY} from '../constants/constants';
-import imagePath from '../constants/imagePath';
+import {YOUR_GOOGLE_MAPS_API_KEY} from '../../constants/constants';
+import imagePath from '../../constants/imagePath';
 import GetLocation from 'react-native-get-location';
 import {getCurrentPosition} from 'react-native-geolocation-service';
 
@@ -184,27 +184,5 @@ const Route = () => {
     </SafeAreaView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  bottomCard: {
-    backgroundColor: 'white',
-    width: '100%',
-    padding: 30,
-    borderTopEndRadius: 24,
-    borderTopStartRadius: 24,
-  },
-  inpuStyle: {
-    backgroundColor: 'white',
-    borderRadius: 4,
-    borderWidth: 1,
-    alignItems: 'center',
-    height: 48,
-    justifyContent: 'center',
-    marginTop: 16,
-  },
-});
 
 export default Route;

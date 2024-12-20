@@ -21,6 +21,7 @@ import PhoneStyle from './PhoneStyle';
 
 const {width, height} = Dimensions.get('window');
 
+// Floating Label Input Component
 const FloatingLabelInput = ({label, value, onChangeText, ...props}) => {
   const [isFocused, setIsFocused] = useState(false);
 
@@ -42,6 +43,7 @@ const FloatingLabelInput = ({label, value, onChangeText, ...props}) => {
   );
 };
 
+// Custom Button Component
 const CustomButton = ({icon: Icon, title, onPress}) => {
   return (
     <TouchableOpacity style={PhoneStyle.button} onPress={onPress}>
@@ -55,6 +57,7 @@ const CustomButton = ({icon: Icon, title, onPress}) => {
   );
 };
 
+// Green Button Component
 const GreenButton = ({title, onPress}) => {
   return (
     <TouchableOpacity style={PhoneStyle.greenButton} onPress={onPress}>
@@ -65,9 +68,12 @@ const GreenButton = ({title, onPress}) => {
 
 const ConnectWithPhone = () => {
   const navigation = useNavigation();
-  const [isFocused, setIsFocused] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [phoneError, setPhoneError] = useState('');
   const [placeholderTop] = useState(new Animated.Value(20));
+
+  // Regular expression for phone number validation (e.g., 10 digits)
+  const phoneRegex = /^[0-9]{10}$/;
 
   useEffect(() => {
     const keyboardDidShowListener = Keyboard.addListener(
@@ -86,11 +92,33 @@ const ConnectWithPhone = () => {
     };
   }, []);
 
+  // Function to handle the input change and allow only numeric characters
+  const handlePhoneChange = (input) => {
+    // Allow only numeric characters
+    const numericInput = input.replace(/[^0-9]/g, '');
+    setPhoneNumber(numericInput);
 
+    // Clear the error message when exactly 10 digits are entered
+    if (numericInput.length === 10) {
+      setPhoneError('');
+    }
+  };
+
+  // Function to verify the driver
   const verifyDriver = async () => {
+    if (phoneNumber.length < 10) {
+      setPhoneError('Please enter a valid 10-digit phone number');
+      return;
+    } else if (!phoneRegex.test(phoneNumber)) {
+      setPhoneError('Phone number must be exactly 10 digits');
+      return;
+    }
+
+    setPhoneError(''); // Clear error if phone number is valid
+
     try {
       const response = await fetch(
-        'http://192.168.1.10:9000/api/verify-driver',
+        'http://192.168.1.2:9000/api/verify-driver',
         {
           method: 'POST',
           headers: {
@@ -135,9 +163,11 @@ const ConnectWithPhone = () => {
             <FloatingLabelInput
               label="Enter Phone Number"
               keyboardType="phone-pad"
+              maxLength={10} // Restrict input to 10 digits
               value={phoneNumber}
-              onChangeText={setPhoneNumber}
+              onChangeText={handlePhoneChange} // Call the handler that only accepts numeric input
             />
+            {phoneError ? <Text style={PhoneStyle.errorText}>{phoneError}</Text> : null}
           </View>
 
           <View style={PhoneStyle.buttonContainer}>

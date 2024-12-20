@@ -3,15 +3,13 @@ import {
   View,
   Text,
   TextInput,
-  StyleSheet,
-  Button,
   Alert,
   TouchableOpacity,
   Modal,
   FlatList,
 } from "react-native";
-import Geolocation from '@react-native-community/geolocation';
 import { Picker } from '@react-native-picker/picker';
+import Style from './Style';
 
 const AddCustomer = ({ route }) => {
   const [customerName, setCustomerName] = useState("");
@@ -21,10 +19,8 @@ const AddCustomer = ({ route }) => {
   const [location, setLocation] = useState(null);
   const [adminOptions, setAdminOptions] = useState([]);
   const [selectedAdmin, setSelectedAdmin] = useState(null);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [modal2Visible, setModal2Visible] = useState(false);
   const [adminRoutes, setAdminRoutes] = useState([]);
-  const [selectedRouteId, setSelectedRouteId] = useState(null); // Selected route ID
+  const [selectedRouteId, setSelectedRouteId] = useState(null);
   const [successAddedCustomer, setSuccessAddedCustomer] = useState(false);
   const [notifyErr, setNotifyErr] = useState(false);
   const { driverId } = route.params;
@@ -36,19 +32,15 @@ const AddCustomer = ({ route }) => {
   useEffect(() => {
     const fetchRoutes = async () => {
       try {
-        const response = await fetch(`http://192.168.1.5:9000/api/route/${driverId}`);
+        const response = await fetch(`http://192.168.1.2:9000/api/route/${driverId}`);
         const data = await response.json();
-        console.log("Fetched route:", data); // Log the full response to inspect the structure
+        console.log("Fetched route:", data);
 
-        // Check if the fetched data contains the expected structure
         if (data && data.customersByRoute && data.customersByRoute[0].route) {
-          // Extract the route object
           const route = data.customersByRoute[0].route;
-
-          // Create an array with the route info
           const routes = [{
-            id: route._id,  // Assuming the route object has an _id field
-            name: route.name // Assuming the route object has a name field
+            id: route._id, 
+            name: route.name
           }];
 
           if (routes.length > 0) {
@@ -56,16 +48,16 @@ const AddCustomer = ({ route }) => {
             console.log("Filtered Routes:", routes);
           } else {
             console.log("No routes found for this driverId");
-            setAdminRoutes([]); // Ensure it's an empty array if no routes found
+            setAdminRoutes([]);
           }
         } else {
           console.error("Invalid structure in fetched data:", data);
-          setAdminRoutes([]); // Fallback to an empty array
+          setAdminRoutes([]); 
         }
       } catch (error) {
         console.error("Error fetching route options:", error);
         Alert.alert('Error', 'Failed to fetch route options: ' + error.message);
-        setAdminRoutes([]); // Fallback to an empty array in case of error
+        setAdminRoutes([]);
       }
     };
 
@@ -75,7 +67,7 @@ const AddCustomer = ({ route }) => {
   useEffect(() => {
     const fetchAdminOptions = async () => {
       try {
-        const response = await fetch(`http://192.168.1.5:9000/api/get-all-admin-assigned/to/${driverId}`);
+        const response = await fetch(`http://192.168.1.2:9000/api/get-all-admin-assigned/to/${driverId}`);
         if (!response.ok) {
           throw new Error(`Failed to fetch admin options, status: ${response.status}`);
         }
@@ -89,9 +81,30 @@ const AddCustomer = ({ route }) => {
     fetchAdminOptions();
   }, []);
 
+  // Handle real-time validation for customer name (allow only alphabets and spaces)
+  const handleCustomerNameChange = (text) => {
+    const namePattern = /^[A-Za-z\s]*$/;  // Allow only alphabets and spaces
+    if (namePattern.test(text)) {
+      setCustomerName(text);
+    }
+  };
+
+  // Handle real-time validation for mobile number (allow only numeric input)
+  const handleMobileNoChange = (text) => {
+    const mobilePattern = /^[0-9]*$/; // Allow only numbers
+    if (mobilePattern.test(text)) {
+      setMobileNo(text);
+    }
+  };
+
+  // Handle email input, no real-time restriction, but we will validate on submit
+  const handleEmailChange = (text) => {
+    setEmail(text);
+  };
+
   const handleSubmit = async () => {
-    if (!customerName || !mobileNo || !address || !email || !selectedRouteId) {
-      Alert.alert("Error", "Please fill in all fields.");
+    // Validate inputs before proceeding
+    if (!validateFields()) {
       return;
     }
 
@@ -104,11 +117,11 @@ const AddCustomer = ({ route }) => {
       route: selectedRouteId,
     };
 
-    console.log("Payload:", payload); // Log the payload to ensure it's correctly populated
+    console.log("Payload:", payload);
 
     try {
       const response = await fetch(
-        `http://192.168.1.5:9000/api/customers/to/${selectedAdmin}`,
+        `http://192.168.1.2:9000/api/customers/to/${selectedAdmin}`,
         {
           method: "POST",
           headers: {
@@ -119,21 +132,20 @@ const AddCustomer = ({ route }) => {
       );
 
       const data = await response.json();
-      console.log("API Response:", data);  // Log the response to inspect the result
+      console.log("API Response:", data);
 
       if (data.success) {
         console.log("Customer Added ✅");
         setSuccessAddedCustomer(true);
         setTimeout(() => {
           setSuccessAddedCustomer(false);
-          // Reset all fields to initial values
           setCustomerName('');
           setMobileNo('');
           setAddress('');
           setEmail('');
           setSelectedAdmin(null);
           setSelectedRouteId(null);
-          setLocation(null); // If you need to reset location as well
+          setLocation(null);
         }, 3000);
       } else {
         console.log("Customer not added ❌");
@@ -151,42 +163,74 @@ const AddCustomer = ({ route }) => {
     }
   };
 
+  // Validation function
+  const validateFields = () => {
+    // Customer Name: Only alphabets and spaces allowed
+    const namePattern = /^[A-Za-z\s]+$/;
+    if (!namePattern.test(customerName)) {
+      Alert.alert("Invalid Customer Name", "Customer name can only contain alphabets and spaces.");
+      return false;
+    }
+
+    // Mobile No: Only numeric and 10 digits
+    const mobilePattern = /^[0-9]{10}$/;
+    if (!mobilePattern.test(mobileNo)) {
+      Alert.alert("Invalid Mobile No", "Mobile number must be 10 digits.");
+      return false;
+    }
+
+    // Email: Simple validation
+    const emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailPattern.test(email)) {
+      Alert.alert("Invalid Email", "Please enter a valid email address.");
+      return false;
+    }
+
+    if (!selectedRouteId || !selectedAdmin) {
+      Alert.alert("Error", "Please select both a route and an admin.");
+      return false;
+    }
+
+    return true;
+  };
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>CUSTOMER INFORMATION</Text>
+    <View style={Style.container}>
+      <Text style={Style.title}>CUSTOMER INFORMATION</Text>
       <TextInput
-        style={styles.input}
+        style={Style.input}
         placeholder="Customer Name"
         value={customerName}
-        onChangeText={setCustomerName}
+        onChangeText={handleCustomerNameChange} // Handle change for customer name
       />
       <TextInput
-        style={styles.input}
+        style={Style.input}
         placeholder="Mobile No"
         value={mobileNo}
-        onChangeText={setMobileNo}
+        onChangeText={handleMobileNoChange} // Handle change for mobile number
         keyboardType="numeric"
+        maxLength={10}
       />
       <TextInput
-        style={styles.input}
+        style={Style.input}
         placeholder="Address"
         value={address}
         onChangeText={setAddress}
       />
       <TextInput
-        style={styles.input}
+        style={Style.input}
         placeholder="Email ID"
         value={email}
-        onChangeText={setEmail}
+        onChangeText={handleEmailChange} // Handle change for email
         keyboardType="email-address"
       />
 
-      <Text style={styles.dropdownLabel}>Select Admin:</Text>
-      <View style={styles.pickerContainer}>
+      <Text style={Style.dropdownLabel}>Select Admin:</Text>
+      <View style={Style.pickerContainer}>
         <Picker
           selectedValue={selectedAdmin}
-          style={styles.picker}
-          onValueChange={(item) => setSelectedAdmin(item)} // Set selected route ID
+          style={Style.picker}
+          onValueChange={(item) => setSelectedAdmin(item)}
         >
           <Picker.Item label="Select admin" value={null} />
           {Array.isArray(adminOptions) && adminOptions.length > 0 ? (
@@ -203,12 +247,12 @@ const AddCustomer = ({ route }) => {
         </Picker>
       </View>
 
-      <Text style={styles.dropdownLabel}>Select Route:</Text>
-      <View style={styles.pickerContainer}>
+      <Text style={Style.dropdownLabel}>Select Route:</Text>
+      <View style={Style.pickerContainer}>
         <Picker
           selectedValue={selectedRouteId}
-          style={styles.picker}
-          onValueChange={(itemValue) => setSelectedRouteId(itemValue)} // Set selected route ID
+          style={Style.picker}
+          onValueChange={(itemValue) => setSelectedRouteId(itemValue)}
         >
           <Picker.Item label="Select a route" value={null} />
           {Array.isArray(adminRoutes) && adminRoutes.length > 0 ? (
@@ -225,30 +269,28 @@ const AddCustomer = ({ route }) => {
         </Picker>
       </View>
 
-      <View style={styles.footer}>
-        <TouchableOpacity style={styles.button1} onPress={handleSubmit}>
-          <Text style={styles.buttonText}>Add Customer</Text>
+      <View style={Style.footer}>
+        <TouchableOpacity style={Style.button1} onPress={handleSubmit}>
+          <Text style={Style.buttonText}>Add Customer</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Success Modal */}
       <Modal
         visible={successAddedCustomer}
         animationType="fade"
         transparent={true}
         onRequestClose={() => setSuccessAddedCustomer(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalText}>Customer Added Successfully!</Text>
-            {/* <Button title="Close" onPress={() => setSuccessAddedCustomer(false)} /> */}
+        <View style={Style.modalOverlay}>
+          <View style={Style.modalContent}>
+            <Text style={Style.modalText}>Customer Added Successfully!</Text>
           </View>
         </View>
       </Modal>
 
       {notifyErr && (
-        <View style={styles.error}>
-          <Text style={styles.errorText}>
+        <View style={Style.error}>
+          <Text style={Style.errorText}>
             {`Customer with ${email} already existed, try with a different Email Id.`}
           </Text>
         </View>
@@ -256,112 +298,5 @@ const AddCustomer = ({ route }) => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#fff",
-    padding: 20,
-  },
-  success: {
-    backgroundColor: "#22ca5d",
-    marginTop: 50,
-    width: "60%",
-  },
-  error: {
-    backgroundColor: "red",
-    marginTop: 50,
-    width: "60%",
-  },
-  successText: {
-    padding: 10,
-    color: "white",
-  },
-  errorText: {
-    padding: 10,
-    color: "white",
-  },
-  title: {
-    fontSize: 23,
-    fontWeight: "bold",
-    marginBottom: 20,
-    marginTop:30,
-    color:'#20B2AA'
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: "#20B2AA",
-    borderRadius: 5,
-    padding: 10,
-    marginBottom: 10,
-    marginTop: 5,
-    width: "100%",
-  },
-  dropdownLabel: {
-    fontSize: 15,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    color: '#20B2AA',
-    marginTop:10
-  },
-  picker: {
-    height: 60,
-    width: '100%',
-    marginLeft:5
-  },
-  pickerContainer: {
-    height: 60,
-    width:'100%',
-    borderWidth: 1,
-    borderColor: '#15837d',
-    borderRadius: 20, // Border radius applied to the container
-    overflow: 'hidden', // This ensures the border radius works
-    backgroundColor: '#a2d9d4',
-    marginTop:10
-  },
-  footer: {
-    padding: 20,
-    marginTop: 50,
-    borderBottomLeftRadius: 15,
-    borderBottomRightRadius: 15,
-  },
-  button1: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#20B2AA',
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    borderRadius: 10,
-    marginBottom: 15,
-    justifyContent: 'center',
-    width:'100%'
-  },
-  buttonText: {
-    fontSize: 16,
-    color: '#fff',
-    marginVertical:5,
-    marginHorizontal:70
-  },
-  modalOverlay: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)", // Semi-transparent background
-  },
-  modalContent: {
-    backgroundColor: "white",
-    padding: 20,
-    borderRadius: 10,
-    width: '90%',
-    alignItems: "center",
-  },
-  modalText: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#20B2AA",
-  },
-});
 
 export default AddCustomer;

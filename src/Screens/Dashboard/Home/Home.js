@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, TouchableOpacity, Modal, StyleSheet, ActivityIndicator } from 'react-native';
+import Styles from './Styles';
 
 const Home = ({ navigation, route }) => {
   const [routes, setRoutes] = useState([]);
@@ -19,7 +20,7 @@ const Home = ({ navigation, route }) => {
       try {
         setLoading(true);
         setError(null);
-        const response = await fetch(`http://192.168.1.10:9000/api/route/${driverId}`);
+        const response = await fetch(`http://192.168.1.2:9000/api/route/${driverId}`);
         const data = await response.json();
         console.log("Fetched data:", data);  // Log the entire fetched data to inspect the structure
 
@@ -56,18 +57,18 @@ const Home = ({ navigation, route }) => {
     console.log(item);  // Log each item to check the structure
 
     return (
-      <TouchableOpacity style={styles.routeTile} onPress={() => handleTileClick(item)}>
-        <Text style={styles.routeText}>{item.routeName}</Text>
+      <TouchableOpacity style={Styles.routeTile} onPress={() => handleTileClick(item)}>
+        <Text style={Styles.routeText}>{item.routeName}</Text>
       </TouchableOpacity>
     );
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Routes for Delivery</Text>
+    <View style={Styles.container}>
+      <Text style={Styles.title}>Routes for Delivery</Text>
 
       {loading && <ActivityIndicator size="large" color="#20B2AA" />}
-      {error && <Text style={styles.errorText}>{error}</Text>}
+      {error && <Text style={Styles.errorText}>{error}</Text>}
 
       {/* Display routes when data is loaded and no errors */}
       {!loading && !error && (
@@ -76,7 +77,7 @@ const Home = ({ navigation, route }) => {
           renderItem={renderRouteItem}
           keyExtractor={(item) => item.routeId.toString()}  // Use routeId for unique key
           numColumns={2}
-          contentContainerStyle={styles.routeList}
+          contentContainerStyle={Styles.routeList}
         />
       )}
 
@@ -87,19 +88,19 @@ const Home = ({ navigation, route }) => {
         visible={modalVisible}
         onRequestClose={() => setModalVisible(false)}
       >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
+        <View style={Styles.modalContainer}>
+          <View style={Styles.modalContent}>
             {selectedRoute && (
               <>
-                <Text style={styles.modalTitle}>Route Details</Text>
+                <Text style={Styles.modalTitle}>Route Details</Text>
                 <Text>Route: {selectedRoute.routeName}</Text>
                 <Text>Customer: {selectedRoute.customerName}</Text>
                 <Text>Address: {selectedRoute.address}</Text>
                 <TouchableOpacity
-                  style={styles.closeButton}
+                  style={Styles.closeButton}
                   onPress={() => setModalVisible(false)}
                 >
-                  <Text style={styles.closeButtonText}>Close</Text>
+                  <Text style={Styles.closeButtonText}>Close</Text>
                 </TouchableOpacity>
               </>
             )}
@@ -109,71 +110,5 @@ const Home = ({ navigation, route }) => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-    backgroundColor: '#f9f9f9',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  routeList: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  routeTile: {
-    backgroundColor: '#20B2AA',
-    padding: 20,
-    margin: 10,
-    borderRadius: 10,
-    width: 150,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  routeText: {
-    color: 'white',
-    fontSize: 14,
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-  modalContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  modalContent: {
-    width: '80%',
-    padding: 20,
-    backgroundColor: 'white',
-    borderRadius: 10,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 15,
-  },
-  closeButton: {
-    marginTop: 20,
-    backgroundColor: '#f44336',
-    padding: 10,
-    borderRadius: 5,
-    alignItems: 'center',
-  },
-  closeButtonText: {
-    color: 'white',
-    fontSize: 16,
-  },
-  errorText: {
-    color: 'red',
-    textAlign: 'center',
-    marginTop: 20,
-  },
-});
 
 export default Home;
