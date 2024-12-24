@@ -156,10 +156,7 @@ const Route = ({navigation}) => {
               showsUserLocation={false}
               onError={handleError}
               onReady={result => {
-                console.log(
-                  `Directions Ready for Drop ${selectedDropIndex + 1}`,
-                  result,
-                );
+               
                 // Zoom the map to fit the route
                 zoomToFitRoute(result.coordinates); // Calling the zoomToFitRoute function
               }}

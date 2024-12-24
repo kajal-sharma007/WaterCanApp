@@ -1,15 +1,6 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  TextInput,
-  Button,
-  ScrollView,
-  ActivityIndicator,
-} from 'react-native';
-import {Card} from 'react-native-paper';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, Button, ScrollView, ActivityIndicator } from 'react-native';
+import { Card } from 'react-native-paper';
 
 const EditTransactionScreen = () => {
   return (
@@ -20,16 +11,12 @@ const EditTransactionScreen = () => {
         <Card.Title title="Customer Details" />
         <Card.Content>
           <Text style={styles.customerDetails}>Customer: Customer A</Text>
-          <Text style={styles.customerDetails}>
-            Address: H Block South Delhi, India
-          </Text>
+          <Text style={styles.customerDetails}>Address: H Block South Delhi, India</Text>
           <Text style={styles.customerDetails}>Phone: 9876543219</Text>
           <Text style={styles.customerDetails}>Email: example@gmail.com</Text>
-          <Text style={{marginBottom: 8}}>Last Delivered: -</Text>
+          <Text style={{ marginBottom: 8 }}>Last Delivered: -</Text>
           <Text style={styles.date}>Date: 24/12/2024</Text>
-          <Text style={[styles.date, {marginVertical: 10}]}>
-            Bottles Left: 5
-          </Text>
+          <Text style={[styles.date, { marginVertical: 10 }]}>Bottles Left: 5</Text>
         </Card.Content>
       </Card>
 
@@ -39,18 +26,10 @@ const EditTransactionScreen = () => {
       </TouchableOpacity>
 
       <Text style={styles.label}>Bottles Received:</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Enter Bottles Received"
-        keyboardType="numeric"
-      />
+      <TextInput style={styles.input} placeholder="Enter Bottles Received" keyboardType="numeric" />
 
       <Text style={styles.label}>Bottles Delivered:</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Enter Bottles Delivered"
-        keyboardType="numeric"
-      />
+      <TextInput style={styles.input} placeholder="Enter Bottles Delivered" keyboardType="numeric" />
 
       <View style={styles.buttonContainer}>
         <Button title="Add Combo" onPress={() => {}} />
@@ -62,11 +41,7 @@ const EditTransactionScreen = () => {
         </View>
       </View>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Amount Received"
-        keyboardType="numeric"
-      />
+      <TextInput style={styles.input} placeholder="Amount Received" keyboardType="numeric" />
       <Text>Price: 500</Text>
       <Text>Last Due Amount: 100</Text>
       <Text>Total Payable Amount: 600</Text>

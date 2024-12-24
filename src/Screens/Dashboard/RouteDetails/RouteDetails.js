@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Styles from './Styles';
+import { WIFI } from '../../constants/constants';
 
 const RouteDetails = ({route}) => {
   const [routeDetails, setRouteDetails] = useState(null); // State to store the route details from API
