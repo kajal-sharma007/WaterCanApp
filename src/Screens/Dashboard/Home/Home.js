@@ -21,6 +21,7 @@ const Home = ({ navigation, route }) => {
       try {
         setLoading(true);
         setError(null);
+       
         const response = await fetch(`http://${WIFI}/api/route/${driverId}`);
         const data = await response.json();
         console.log("Fetched data:", data);  // Log the entire fetched data to inspect the structure
@@ -29,7 +30,7 @@ const Home = ({ navigation, route }) => {
           // Process the data from response
           const routesData = data.customersByRoute.map(item => ({
             routeName: item.route.name,  // Route name
-            customerName: item.customerArr.length > 0 ? item.customerArr[0]?.name : 'No customers',  // First customer name (fallback if empty)
+            customerName:  item.customerArr.length > 0 ? item.customerArr : [],    // First customer name (fallback if empty)
             address: item.customerArr.length > 0 ? item.customerArr[0]?.address : 'No address available', // Customer address (fallback if empty)
             routeId: item.route._id,  // Route id for unique identification
             customerId: item.customerArr.length > 0 ? item.customerArr[0]?._id : null  // Customer id (use null if no customer)
@@ -55,7 +56,7 @@ const Home = ({ navigation, route }) => {
   };
 
   const renderRouteItem = ({ item }) => {
-    console.log(item);  // Log each item to check the structure
+    console.log("data",item);  // Log each item to check the structure
 
     return (
       <TouchableOpacity style={Styles.routeTile} onPress={() => handleTileClick(item)}>
@@ -95,8 +96,8 @@ const Home = ({ navigation, route }) => {
               <>
                 <Text style={Styles.modalTitle}>Route Details</Text>
                 <Text>Route: {selectedRoute.routeName}</Text>
-                <Text>Customer: {selectedRoute.customerName}</Text>
-                <Text>Address: {selectedRoute.address}</Text>
+                <Text>{selectedRoute.customerName.length > 0 ? `${selectedRoute.customerName.length} customers` : 'No customers'}</Text>
+                {/* <Text>Address: {selectedRoute.address}</Text> */}
                 <TouchableOpacity
                   style={Styles.closeButton}
                   onPress={() => setModalVisible(false)}
