@@ -6,6 +6,10 @@ import {
   SafeAreaView,
   TouchableOpacity,
   Image,
+  Modal,
+  Text,
+  Button,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import MapView, {Marker} from 'react-native-maps';
 import MapViewDirections from 'react-native-maps-directions';
@@ -14,7 +18,7 @@ import imagePath from '../../constants/imagePath';
 import GetLocation from 'react-native-get-location';
 import {getCurrentPosition} from 'react-native-geolocation-service';
 
-const Route = () => {
+const Route = ({navigation}) => {
   const [state, setState] = useState({
     pickupCords: {
       latitude: 26.8947,
@@ -30,13 +34,15 @@ const Route = () => {
       {latitude: 26.076, longitude: 75.8777},
       {latitude: 26.5726, longitude: 75.3639},
       {latitude: 26.7333, longitude: 75.7794},
-      {latitude: 26.9716, longitude: 75.5946},
-      {latitude: 26.1702, longitude: 75.8311},
+      {latitude: 24.5698, longitude: 73.6955},
+      {latitude: 24.5798, longitude: 73.6955},
     ],
     selectedDropIndex: null, // Track which drop point is selected
   });
 
   const mapRef = useRef(null); // Create a reference to the MapView
+
+  const [isModalVisible, setModalVisible] = useState(false); // State to control modal visibility
 
   const {pickupCords, dropCords, selectedDropIndex} = state;
 
@@ -78,7 +84,7 @@ const Route = () => {
       );
       return;
     }
-  }, [dropCords, pickupCords]); // Empty dependency array ensures this runs once on component mount
+  }, [dropCords, pickupCords]);
 
   const handleError = error => {
     console.error('Error loading map or directions:', error);
@@ -101,6 +107,7 @@ const Route = () => {
       ...prevState,
       selectedDropIndex: index,
     }));
+    setModalVisible(true); // Show the modal when a marker is pressed
   };
 
   // Resize the marker images
@@ -160,8 +167,68 @@ const Route = () => {
           )}
         </MapView>
       </View>
+
+      {/* Modal for Marker Interaction */}
+      <Modal
+        visible={isModalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setModalVisible(false)}>
+        <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
+          <View style={styles.modalOverlay}>
+            <TouchableWithoutFeedback>
+              <View style={styles.modalContent}>
+                <TouchableOpacity
+                  style={styles.closeIcon}
+                  onPress={() => setModalVisible(false)}>
+                  <Text style={styles.closeText}>X</Text>
+                </TouchableOpacity>
+                <Text style={styles.modalTitle}>
+                  Drop Location {selectedDropIndex + 1}
+                </Text>
+                <Button
+                  title="Edit Transaction"
+                  onPress={() => {
+                    setModalVisible(false);
+                    navigation.navigate('EditTransactionScreen'); // Navigate to EditTransactionScreen
+                  }}
+                />
+              </View>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
     </SafeAreaView>
   );
 };
+
+const styles = StyleSheet.create({
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    width: '80%',
+    padding: 20,
+    backgroundColor: 'white',
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  closeIcon: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+  },
+  closeText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  modalTitle: {
+    fontSize: 18,
+    marginBottom: 20,
+  },
+});
 
 export default Route;

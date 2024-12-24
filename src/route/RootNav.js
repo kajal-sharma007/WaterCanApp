@@ -9,6 +9,8 @@ import Route from '../Screens/Dashboard/Route/Route';
 import AddCustomer from '../Screens/Dashboard/AddCustomer/AddCustomer';
 import Profile from '../Screens/Dashboard/Profile/Profile';
 import RouteDetails from '../Screens/Dashboard/RouteDetails/RouteDetails';
+import EditTransactionScreen from '../Screens/Dashboard/Transaction/EditTransactionScreen';
+
 
 
 const Stack = createStackNavigator();
@@ -26,6 +28,10 @@ const RootNav = () => {
       <Stack.Screen name="AddCustomer" component={AddCustomer} />
       <Stack.Screen name="Profile" component={Profile} />
       <Stack.Screen name="RouteDetails" component={RouteDetails} />
+      <Stack.Screen
+        name="EditTransactionScreen"
+        component={EditTransactionScreen}
+      />
     </Stack.Navigator>
   );
 };
