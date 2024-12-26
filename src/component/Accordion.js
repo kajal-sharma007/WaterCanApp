@@ -1,6 +1,6 @@
 import React, {useState} from 'react';
 import {StyleSheet, Text, View, TouchableOpacity, Image} from 'react-native';
-import arrow from '../asset/SVG/blackarrow.png'; // Adjust the path as necessary
+import arrow from '../assets/images/greenMarker.png'; // Adjust the path as necessary
 
 const Accordion = ({
   title,

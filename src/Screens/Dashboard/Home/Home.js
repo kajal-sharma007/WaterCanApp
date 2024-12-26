@@ -1,15 +1,23 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, TouchableOpacity, Modal, StyleSheet, ActivityIndicator } from 'react-native';
+import React, {useState, useEffect} from 'react';
+import {
+  View,
+  Text,
+  FlatList,
+  TouchableOpacity,
+  Modal,
+  StyleSheet,
+  ActivityIndicator,
+} from 'react-native';
 import Styles from './Styles';
-import { WIFI } from '../../constants/constants';
+import {WIFI} from '../../constants/constants';
 
-const Home = ({ navigation, route }) => {
+const Home = ({navigation, route}) => {
   const [routes, setRoutes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedRoute, setSelectedRoute] = useState(null);
-  const { driverId } = route.params;
+  const {driverId} = route.params;
 
   useEffect(() => {
     console.log('Driver ID Home:', driverId); // Log the driverId to confirm it is valid
@@ -21,22 +29,26 @@ const Home = ({ navigation, route }) => {
       try {
         setLoading(true);
         setError(null);
-       
+
         const response = await fetch(`http://${WIFI}/api/route/${driverId}`);
         const data = await response.json();
-        console.log("Fetched data:", data);  // Log the entire fetched data to inspect the structure
+        console.log('Fetched data:', data); // Log the entire fetched data to inspect the structure
 
         if (response.ok) {
           // Process the data from response
           const routesData = data.customersByRoute.map(item => ({
-            routeName: item.route.name,  // Route name
-            customerName:  item.customerArr.length > 0 ? item.customerArr : [],    // First customer name (fallback if empty)
-            address: item.customerArr.length > 0 ? item.customerArr[0]?.address : 'No address available', // Customer address (fallback if empty)
-            routeId: item.route._id,  // Route id for unique identification
-            customerId: item.customerArr.length > 0 ? item.customerArr[0]?._id : null  // Customer id (use null if no customer)
+            routeName: item.route.name, // Route name
+            customerName: item.customerArr.length > 0 ? item.customerArr : [], // First customer name (fallback if empty)
+            address:
+              item.customerArr.length > 0
+                ? item.customerArr[0]?.address
+                : 'No address available', // Customer address (fallback if empty)
+            routeId: item.route._id, // Route id for unique identification
+            customerId:
+              item.customerArr.length > 0 ? item.customerArr[0]?._id : null, // Customer id (use null if no customer)
           }));
 
-          setRoutes(routesData);  // Set the formatted data for FlatList
+          setRoutes(routesData); // Set the formatted data for FlatList
         } else {
           throw new Error('Failed to load routes');
         }
@@ -50,16 +62,18 @@ const Home = ({ navigation, route }) => {
     fetchRoutes();
   }, [driverId]);
 
-  const handleTileClick = (route) => {
+  const handleTileClick = route => {
     setSelectedRoute(route);
     setModalVisible(true);
   };
 
-  const renderRouteItem = ({ item }) => {
-    console.log("data",item);  // Log each item to check the structure
+  const renderRouteItem = ({item}) => {
+    console.log('data', item); // Log each item to check the structure
 
     return (
-      <TouchableOpacity style={Styles.routeTile} onPress={() => handleTileClick(item)}>
+      <TouchableOpacity
+        style={Styles.routeTile}
+        onPress={() => handleTileClick(item)}>
         <Text style={Styles.routeText}>{item.routeName}</Text>
       </TouchableOpacity>
     );
@@ -77,7 +91,7 @@ const Home = ({ navigation, route }) => {
         <FlatList
           data={routes}
           renderItem={renderRouteItem}
-          keyExtractor={(item) => item.routeId.toString()}  // Use routeId for unique key
+          keyExtractor={item => item.routeId.toString()} // Use routeId for unique key
           numColumns={2}
           contentContainerStyle={Styles.routeList}
         />
@@ -88,20 +102,22 @@ const Home = ({ navigation, route }) => {
         transparent={true}
         animationType="slide"
         visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
-      >
+        onRequestClose={() => setModalVisible(false)}>
         <View style={Styles.modalContainer}>
           <View style={Styles.modalContent}>
             {selectedRoute && (
               <>
                 <Text style={Styles.modalTitle}>Route Details</Text>
                 <Text>Route: {selectedRoute.routeName}</Text>
-                <Text>{selectedRoute.customerName.length > 0 ? `${selectedRoute.customerName.length} customers` : 'No customers'}</Text>
+                <Text>
+                  {selectedRoute.customerName.length > 0
+                    ? `${selectedRoute.customerName.length} customers`
+                    : 'No customers'}
+                </Text>
                 {/* <Text>Address: {selectedRoute.address}</Text> */}
                 <TouchableOpacity
                   style={Styles.closeButton}
-                  onPress={() => setModalVisible(false)}
-                >
+                  onPress={() => setModalVisible(false)}>
                   <Text style={Styles.closeButtonText}>Close</Text>
                 </TouchableOpacity>
               </>
