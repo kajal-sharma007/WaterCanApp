@@ -18,7 +18,7 @@ import imagePath from '../../constants/imagePath';
 import GetLocation from 'react-native-get-location';
 import { WIFI } from '../../constants/constants';
 
-const Route = ({navigation}) => {
+const Route = ({ navigation, route }) => {
   const [state, setState] = useState({
     pickupCords: {
       latitude: 26.8947,
@@ -26,27 +26,19 @@ const Route = ({navigation}) => {
       latitudeDelta: 0.0922,
       longitudeDelta: 0.0421,
     },
-    dropCords: [
-      {latitude: 26.8505, longitude: 75.7628},
-      {latitude: 26.9124, longitude: 75.7873},
-      {latitude: 26.1751, longitude: 75.0421},
-      {latitude: 26.6139, longitude: 75.209},
-      {latitude: 26.076, longitude: 75.8777},
-      {latitude: 26.5726, longitude: 75.3639},
-      {latitude: 26.7333, longitude: 75.7794},
-      {latitude: 24.5698, longitude: 73.6955},
-      {latitude: 24.5798, longitude: 73.6955},
-    ],
+    dropCords: [], // Initially empty, will be populated from API
     selectedDropIndex: null, // Track which drop point is selected
+    selectedDropDetails: null, // Store selected drop's customer details
     loading: true, // Track loading state
     error: null, // Track error state
   });
 
   const mapRef = useRef(null); // Create a reference to the MapView
-
   const [isModalVisible, setModalVisible] = useState(false); // State to control modal visibility
 
-  const {pickupCords, dropCords, selectedDropIndex} = state;
+  const { pickupCords, dropCords, selectedDropIndex, selectedDropDetails } = state;
+  console.log(selectedDropDetails);
+  
 
   // Fetch drop locations from the API
   useEffect(() => {
@@ -63,8 +55,7 @@ const Route = ({navigation}) => {
         // Check if customersByRoute exists and contains customers
         if (data.customersByRoute && data.customersByRoute.length > 0) {
           const markers = data.customersByRoute[0].marker; // Extract the marker array
-          // const markers = Array.isArray(data.customersByRoute.marker) ? data.customersByRoute.marker : [];
-          
+
           // Transform the marker data into the format you need for dropCords
           const dropCords = markers.map(marker => ({
             latitude: marker.coordinates.latitude,
@@ -151,10 +142,12 @@ const Route = ({navigation}) => {
     }
   };
 
-  const handleMarkerPress = index => {
+  const handleMarkerPress = (index) => {
+    const selectedDrop = dropCords[index];
     setState(prevState => ({
       ...prevState,
       selectedDropIndex: index,
+      selectedDropDetails: selectedDrop, // Store the customer details for editing
     }));
     setModalVisible(true); // Show the modal when a marker is pressed
   };
@@ -162,7 +155,7 @@ const Route = ({navigation}) => {
   // Resize the marker images
   const resizeMarker = (source, width, height) => {
     const sourceImage = Image.resolveAssetSource(source);
-    return {uri: sourceImage.uri, width, height};
+    return { uri: sourceImage.uri, width, height };
   };
 
   return (
@@ -204,7 +197,6 @@ const Route = ({navigation}) => {
               strokeWidth={4}
               showsUserLocation={false}
               onReady={result => {
-               
                 // Zoom the map to fit the route
                 zoomToFitRoute(result.coordinates); // Calling the zoomToFitRoute function
               }}
@@ -218,14 +210,16 @@ const Route = ({navigation}) => {
         visible={isModalVisible}
         transparent={true}
         animationType="fade"
-        onRequestClose={() => setModalVisible(false)}>
+        onRequestClose={() => setModalVisible(false)}
+      >
         <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
           <View style={styles.modalOverlay}>
             <TouchableWithoutFeedback>
               <View style={styles.modalContent}>
                 <TouchableOpacity
                   style={styles.closeIcon}
-                  onPress={() => setModalVisible(false)}>
+                  onPress={() => setModalVisible(false)}
+                >
                   <Text style={styles.closeText}>X</Text>
                 </TouchableOpacity>
                 <Text style={styles.modalTitle}>
@@ -235,7 +229,10 @@ const Route = ({navigation}) => {
                   title="Edit Transaction"
                   onPress={() => {
                     setModalVisible(false);
-                    navigation.navigate('EditTransactionScreen'); // Navigate to EditTransactionScreen
+                    // Navigate to EditTransactionScreen and pass the selected customer details
+                    navigation.navigate('EditTransactionScreen', {
+                      customerDetails: selectedDropDetails,
+                    });
                   }}
                 />
               </View>

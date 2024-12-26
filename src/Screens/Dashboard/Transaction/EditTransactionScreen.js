@@ -2,7 +2,9 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, Button, ScrollView, ActivityIndicator } from 'react-native';
 import { Card } from 'react-native-paper';
 
-const EditTransactionScreen = () => {
+const EditTransactionScreen = ({ route }) => {
+  const { customerDetails } = route.params;
+  
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Edit Transaction</Text>
@@ -10,11 +12,11 @@ const EditTransactionScreen = () => {
       <Card>
         <Card.Title title="Customer Details" />
         <Card.Content>
-          <Text style={styles.customerDetails}>Customer: Customer A</Text>
-          <Text style={styles.customerDetails}>Address: H Block South Delhi, India</Text>
-          <Text style={styles.customerDetails}>Phone: 9876543219</Text>
-          <Text style={styles.customerDetails}>Email: example@gmail.com</Text>
-          <Text style={{ marginBottom: 8 }}>Last Delivered: -</Text>
+          <Text style={styles.customerDetails}>Customer Name: {customerDetails.title}</Text>
+          <Text style={styles.customerDetails}>Address: {customerDetails.address}</Text>
+          <Text style={styles.customerDetails}>Phone: {customerDetails.phone}</Text>
+          <Text style={styles.customerDetails}>Email: {customerDetails.email}</Text>
+          <Text style={{ marginBottom: 8 }}>Last Delivered :-</Text>
           <Text style={styles.date}>Date: 24/12/2024</Text>
           <Text style={[styles.date, { marginVertical: 10 }]}>Bottles Left: 5</Text>
         </Card.Content>
