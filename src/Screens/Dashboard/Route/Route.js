@@ -18,6 +18,7 @@ import imagePath from '../../constants/imagePath';
 import GetLocation from 'react-native-get-location';
 import {WIFI} from '../../constants/constants';
 
+
 const Route = ({navigation, route}) => {
   const [state, setState] = useState({
     routes: [], // Store all routes data
@@ -45,20 +46,25 @@ const Route = ({navigation, route}) => {
     selectedDropIndex,
     selectedDropDetails,
   } = state;
+    const { driverId } = route.params;
+    
+      useEffect(() => {
+        console.log('Driver ID route :', driverId);
+      }, [driverId]);
 
   // Fetch routes from the API
   useEffect(() => {
     const fetchRoutes = async () => {
       try {
         const response = await fetch(
-          `http://${WIFI}/api/route/${route.params.driverId}`,
+          `http://${WIFI}/api/route/${driverId}`,
         );
         if (!response.ok) {
           throw new Error('Failed to fetch routes');
         }
 
         const data = await response.json();
-        console.log('API Response:', data);
+        console.log('API Response:', data.customersByRoute[0].marker);
 
         if (data.customersByRoute && data.customersByRoute.length > 0) {
           setState(prevState => ({
@@ -80,7 +86,7 @@ const Route = ({navigation, route}) => {
     };
 
     fetchRoutes();
-  }, [route.params.driverId]);
+  }, [driverId]);
 
   // Get the current location of the user
   useEffect(() => {
@@ -106,25 +112,48 @@ const Route = ({navigation, route}) => {
   }, []);
 
   // Handle route selection
-  const handleRouteSelect = routeData => {
-    const dropCords = routeData.marker.map(marker => ({
-      latitude: marker.coordinates.latitude,
-      longitude: marker.coordinates.longitude,
-      title: marker.title,
-      address: marker.details.address,
-      phone: marker.details.phone,
-      email: marker.details.email,
-    }));
+const handleRouteSelect = routeData => {
+  // Map over markers to create dropCords
+  const dropCords = routeData.marker.map(marker => {
+    // Find the corresponding customer from customerArr by matching the id
+    const customer = routeData.customerArr.find(cust => cust._id === marker.id);
+    const userId = routeData.route;
 
-    setState(prevState => ({
-      ...prevState,
-      selectedRoute: routeData,
-      selectedDropCords: dropCords,
-    }));
+    if (customer) {
+      // If customer is found, return coordinates and customer details including bottlesLeft and dueAmt
+      return {
+        latitude: marker.coordinates.latitude,
+        longitude: marker.coordinates.longitude,
+        title: marker.title,
+        id: marker.id,
+        address: marker.details.address,
+        phone: marker.details.phone,
+        email: marker.details.email,
+        bottlesLeft: customer.bottlesLeft, // Adding bottlesLeft from customerArr
+        dueAmt: customer.dueAmt,           // Adding dueAmt from customerArr
+        user: userId.user,
+      };
+    } else {
+      // If no customer found, return null (can be filtered later)
+      return null;
+    }
+  }).filter(Boolean); // Filter out null values in case of missing customers
 
-    // Close the dropdown automatically after route selection
-    setDropdownVisible(false); // Close the dropdown
-  };
+  // Update state with the selected route and dropCords
+  setState(prevState => ({
+    ...prevState,
+    selectedRoute: routeData,
+    selectedDropCords: dropCords,
+  }));
+
+  // Debugging: Log the entire routeData and the dropCords array
+  console.log("Route Data:", routeData);
+  console.log("Drop Coordinates:", dropCords);
+
+  // Close the dropdown
+  setDropdownVisible(false);
+};
+
 
   // Function to handle marker press
   const handleMarkerPress = index => {
@@ -158,7 +187,9 @@ const Route = ({navigation, route}) => {
           style={styles.dropdownButton}
           onPress={() => setDropdownVisible(!isDropdownVisible)} // Toggle dropdown visibility
         >
-          <Text style={styles.dropdownText}>Select Route</Text>
+          <Text style={styles.dropdownText}>
+            {selectedRoute ? selectedRoute.route.name : 'Select Route'}
+          </Text>
         </TouchableOpacity>
 
         {/* Dropdown List - FlatList displayed on top of map */}
@@ -245,7 +276,7 @@ const Route = ({navigation, route}) => {
                   onPress={() => {
                     setModalVisible(false);
                     navigation.navigate('EditTransactionScreen', {
-                      customerDetails: selectedDropDetails,
+                      customerDetails: selectedDropDetails, driverId
                     });
                   }}
                 />
