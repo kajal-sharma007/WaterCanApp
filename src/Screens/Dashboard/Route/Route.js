@@ -1,15 +1,12 @@
 import React, {useState, useEffect, useRef} from 'react';
 import {
   View,
-  StyleSheet,
   SafeAreaView,
   TouchableOpacity,
   Text,
   FlatList,
-  Alert,
-  Modal,
   Button,
-  TouchableWithoutFeedback,
+  StyleSheet,
 } from 'react-native';
 import MapView, {Marker} from 'react-native-maps';
 import MapViewDirections from 'react-native-maps-directions';
@@ -17,66 +14,52 @@ import {YOUR_GOOGLE_MAPS_API_KEY} from '../../constants/constants';
 import imagePath from '../../constants/imagePath';
 import GetLocation from 'react-native-get-location';
 import {WIFI} from '../../constants/constants';
-
+import RouteStyles from './Styles';
+import RBSheet from 'react-native-raw-bottom-sheet'; // Bottom drawer library
 
 const Route = ({navigation, route}) => {
   const [state, setState] = useState({
-    routes: [], // Store all routes data
-    selectedRoute: null, // The currently selected route
+    routes: [],
+    selectedRoute: null,
     pickupCords: {
       latitude: 26.8947,
       longitude: 75.8301,
       latitudeDelta: 0.0922,
       longitudeDelta: 0.0421,
     },
-    selectedDropCords: [], // Drop points for selected route
-    selectedDropIndex: null,
+    selectedDropCords: [],
     selectedDropDetails: null,
     loading: true,
     error: null,
+    dropdownVisible: false,
+    selectedDropIndex: null,
   });
 
   const mapRef = useRef(null);
+  const refRBSheet = useRef(); // Reference for Bottom Drawer
+  const {driverId} = route.params;
 
-  const {
-    routes,
-    selectedRoute,
-    pickupCords,
-    selectedDropCords,
-    selectedDropIndex,
-    selectedDropDetails,
-  } = state;
-    const { driverId } = route.params;
-    
-      useEffect(() => {
-        console.log('Driver ID route :', driverId);
-      }, [driverId]);
-
-  // Fetch routes from the API
+  // Fetch route data from API
   useEffect(() => {
     const fetchRoutes = async () => {
       try {
-        const response = await fetch(
-          `http://${WIFI}/api/route/${driverId}`,
-        );
-        if (!response.ok) {
-          throw new Error('Failed to fetch routes');
-        }
-
+        const response = await fetch(`http://${WIFI}/api/route/${driverId}`);
         const data = await response.json();
-        console.log('API Response:', data.customersByRoute[0].marker);
 
-        if (data.customersByRoute && data.customersByRoute.length > 0) {
+        if (data.customersByRoute.length > 0) {
           setState(prevState => ({
             ...prevState,
-            routes: data.customersByRoute, // Save routes data
+            routes: data.customersByRoute,
             loading: false,
           }));
         } else {
-          throw new Error('No route data found');
+          setState(prevState => ({
+            ...prevState,
+            error: 'No route data found',
+            loading: false,
+          }));
         }
       } catch (error) {
-        console.error('Error fetching routes:', error);
         setState(prevState => ({
           ...prevState,
           error: error.message,
@@ -88,7 +71,7 @@ const Route = ({navigation, route}) => {
     fetchRoutes();
   }, [driverId]);
 
-  // Get the current location of the user
+  // Get current location of the user
   useEffect(() => {
     GetLocation.getCurrentPosition({
       enableHighAccuracy: true,
@@ -99,74 +82,57 @@ const Route = ({navigation, route}) => {
         setState(prevState => ({
           ...prevState,
           pickupCords: {
-            latitude: location.latitude,
-            longitude: location.longitude,
+            ...location,
             latitudeDelta: 0.0922,
             longitudeDelta: 0.0421,
           },
         }));
       })
-      .catch(error => {
-        console.warn(error.code, error.message);
-      });
+      .catch(console.warn);
   }, []);
 
-  // Handle route selection
-const handleRouteSelect = routeData => {
-  // Map over markers to create dropCords
-  const dropCords = routeData.marker.map(marker => {
-    // Find the corresponding customer from customerArr by matching the id
-    const customer = routeData.customerArr.find(cust => cust._id === marker.id);
-    const userId = routeData.route;
+  // Handle route selection (closes dropdown)
+  const handleRouteSelect = routeData => {
+    const dropCords = routeData.marker
+      .map(marker => {
+        const customer = routeData.customerArr.find(
+          cust => cust._id === marker.id,
+        );
+        return customer
+          ? {
+              ...marker.coordinates,
+              title: marker.title,
+              details: marker.details,
+            }
+          : null;
+      })
+      .filter(Boolean);
 
-    if (customer) {
-      // If customer is found, return coordinates and customer details including bottlesLeft and dueAmt
-      return {
-        latitude: marker.coordinates.latitude,
-        longitude: marker.coordinates.longitude,
-        title: marker.title,
-        id: marker.id,
-        address: marker.details.address,
-        phone: marker.details.phone,
-        email: marker.details.email,
-        bottlesLeft: customer.bottlesLeft, // Adding bottlesLeft from customerArr
-        dueAmt: customer.dueAmt,           // Adding dueAmt from customerArr
-        user: userId.user,
-      };
-    } else {
-      // If no customer found, return null (can be filtered later)
-      return null;
-    }
-  }).filter(Boolean); // Filter out null values in case of missing customers
-
-  // Update state with the selected route and dropCords
-  setState(prevState => ({
-    ...prevState,
-    selectedRoute: routeData,
-    selectedDropCords: dropCords,
-  }));
-
-  // Debugging: Log the entire routeData and the dropCords array
-  console.log("Route Data:", routeData);
-  console.log("Drop Coordinates:", dropCords);
-
-  // Close the dropdown
-  setDropdownVisible(false);
-};
-
-
-  // Function to handle marker press
-  const handleMarkerPress = index => {
-    const selectedDrop = selectedDropCords[index];
     setState(prevState => ({
       ...prevState,
-      selectedDropIndex: index,
-      selectedDropDetails: selectedDrop,
+      selectedRoute: routeData,
+      selectedDropCords: dropCords,
     }));
-    setModalVisible(true);
+
+    // Close dropdown after selection
+    setState(prevState => ({
+      ...prevState,
+      dropdownVisible: false,
+    }));
   };
 
-  // Handle zoom to fit coordinates
+  // Handle marker selection (opens bottom sheet)
+  const handleMarkerPress = index => {
+    setState(prevState => ({
+      ...prevState,
+      selectedDropDetails: state.selectedDropCords[index],
+      selectedDropIndex: index,
+    }));
+
+    // Open the bottom drawer
+    refRBSheet.current.open();
+  };
+
   const zoomToFitRoute = coordinates => {
     if (mapRef.current) {
       mapRef.current.fitToCoordinates(coordinates, {
@@ -176,34 +142,47 @@ const handleRouteSelect = routeData => {
     }
   };
 
-  const [isDropdownVisible, setDropdownVisible] = useState(false);
-  const [isModalVisible, setModalVisible] = useState(false); // State for modal visibility
+  // Function to reset all selected locations
+  const resetRoute = () => {
+    setState(prevState => ({
+      ...prevState,
+      selectedRoute: null,
+      selectedDropCords: [],
+      selectedDropDetails: null,
+      selectedDropIndex: null,
+    }));
+  };
 
   return (
     <SafeAreaView style={{flex: 1}}>
       <View style={{flex: 1}}>
-        {/* Dropdown trigger (TouchableOpacity) */}
+        {/* Dropdown for selecting route */}
         <TouchableOpacity
-          style={styles.dropdownButton}
-          onPress={() => setDropdownVisible(!isDropdownVisible)} // Toggle dropdown visibility
-        >
-          <Text style={styles.dropdownText}>
-            {selectedRoute ? selectedRoute.route.name : 'Select Route'}
+          style={RouteStyles.dropdownButton}
+          onPress={() =>
+            setState(prevState => ({
+              ...prevState,
+              dropdownVisible: !prevState.dropdownVisible,
+            }))
+          }>
+          <Text style={RouteStyles.dropdownText}>
+            {state.selectedRoute
+              ? state.selectedRoute.route.name
+              : 'Select Route'}
           </Text>
         </TouchableOpacity>
 
-        {/* Dropdown List - FlatList displayed on top of map */}
-        {isDropdownVisible && (
-          <View style={styles.dropdownContainer}>
+        {/* Dropdown menu */}
+        {state.dropdownVisible && (
+          <View style={RouteStyles.dropdownContainer}>
             <FlatList
-              data={routes}
+              data={state.routes}
               keyExtractor={item => item.route._id}
               renderItem={({item}) => (
                 <TouchableOpacity
-                  style={styles.routeItem}
-                  onPress={() => handleRouteSelect(item)} // Close dropdown after selection
-                >
-                  <Text style={styles.routeName}>{item.route.name}</Text>
+                  style={RouteStyles.routeItem}
+                  onPress={() => handleRouteSelect(item)}>
+                  <Text style={RouteStyles.routeName}>{item.route.name}</Text>
                 </TouchableOpacity>
               )}
             />
@@ -212,146 +191,129 @@ const handleRouteSelect = routeData => {
 
         {/* Map View */}
         <MapView
-          style={styles.mapContainer}
-          initialRegion={{
-            ...pickupCords,
-            latitudeDelta: 0.0922,
-            longitudeDelta: 0.0421,
-          }}
+          style={RouteStyles.mapContainer}
+          initialRegion={state.pickupCords}
           showsUserLocation={true}
           ref={mapRef}>
-          {/* Markers for pickup and drop locations */}
           <Marker
-            coordinate={pickupCords}
+            coordinate={state.pickupCords}
             title="Pickup"
-            image={imagePath.icBike} // Marker image for pickup
+            image={imagePath.icBike}
           />
-          {selectedDropCords.map((drop, index) => (
+          {state.selectedDropCords.map((drop, index) => (
             <Marker
               key={index}
               coordinate={drop}
-              title={`Drop ${index + 1}`}
-              image={imagePath.locationmarker} // Marker image for drop points
-              onPress={() => handleMarkerPress(index)} // Handle marker press
+              title={drop.details?.name}
+              image={imagePath.locationmarker}
+              onPress={() => handleMarkerPress(index)}
             />
           ))}
 
-          {/* Directions for selected drop */}
-          {selectedDropIndex !== null && (
+          {state.selectedDropIndex !== null && (
             <MapViewDirections
-              origin={pickupCords}
-              destination={selectedDropCords[selectedDropIndex]}
+              origin={state.pickupCords}
+              destination={state.selectedDropCords[state.selectedDropIndex]}
               apikey={YOUR_GOOGLE_MAPS_API_KEY}
               strokeColor="blue"
               strokeWidth={4}
               showsUserLocation={false}
-              onReady={result => {
-                zoomToFitRoute(result.coordinates); // Zoom map to fit route
-              }}
+              onReady={result => zoomToFitRoute(result.coordinates)}
             />
           )}
         </MapView>
+
+        {/* Reset Button */}
+        <TouchableOpacity style={styles.resetButton} onPress={resetRoute}>
+          <Text style={styles.resetButtonText}>Reset</Text>
+        </TouchableOpacity>
       </View>
 
-      {/* Modal for Marker Interaction */}
-      <Modal
-        visible={isModalVisible}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setModalVisible(false)}>
-        <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
-          <View style={styles.modalOverlay}>
-            <TouchableWithoutFeedback>
-              <View style={styles.modalContent}>
-                <TouchableOpacity
-                  style={styles.closeIcon}
-                  onPress={() => setModalVisible(false)}>
-                  <Text style={styles.closeText}>X</Text>
-                </TouchableOpacity>
-                <Text style={styles.modalTitle}>
-                  Drop Location {selectedDropIndex + 1}
-                </Text>
-                <Button
-                  title="Edit Transaction"
-                  onPress={() => {
-                    setModalVisible(false);
-                    navigation.navigate('EditTransactionScreen', {
-                      customerDetails: selectedDropDetails, driverId
-                    });
-                  }}
-                />
-              </View>
-            </TouchableWithoutFeedback>
-          </View>
-        </TouchableWithoutFeedback>
-      </Modal>
+      {/* Bottom Drawer for showing marker details */}
+      <RBSheet
+        ref={refRBSheet}
+        height={250} // Adjust height of the drawer as needed
+        openDuration={250}
+        closeOnDragDown={true}
+        customStyles={{
+          container: {
+            backgroundColor: '#141414', // Dark background, like Netflix
+            borderTopLeftRadius: 20,
+            borderTopRightRadius: 20,
+            padding: 20,
+            shadowColor: '#000',
+            shadowOffset: {width: 0, height: -2},
+            shadowOpacity: 0.8,
+            shadowRadius: 3,
+            elevation: 5,
+          },
+        }}>
+        <View style={styles.modalContent}>
+          <Text style={styles.modalTitle}>
+            Drop Location {state.selectedDropIndex + 1}
+          </Text>
+          <Text style={styles.modalText}>
+            Name: {state.selectedDropDetails?.details.name}
+          </Text>
+          <Text style={styles.modalText}>
+            Address: {state.selectedDropDetails?.details.address}
+          </Text>
+          <Text style={styles.modalText}>
+            Phone: {state.selectedDropDetails?.details.phone}
+          </Text>
+          <Text style={styles.modalText}>
+            Email: {state.selectedDropDetails?.details.email}
+          </Text>
+          <Button
+            title="Edit Transaction"
+            onPress={() => {
+              refRBSheet.current.close();
+              navigation.navigate('EditTransactionScreen', {
+                customerDetails: state.selectedDropDetails?.details,
+                driverId,
+              });
+            }}
+          />
+        </View>
+      </RBSheet>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  mapContainer: {
-    flex: 1, // Ensures the map takes full available height
-  },
-  dropdownButton: {
-    padding: 10,
-    backgroundColor: '#009688',
-    margin: 20,
-    borderRadius: 5,
-    zIndex: 2, // Ensures dropdown button is above the map
-  },
-  dropdownText: {
-    color: 'white',
-    fontSize: 18,
-  },
-  dropdownContainer: {
-    position: 'absolute',
-    top: 80, // Adjust for where the button is
-    left: 20,
-    right: 20,
-    backgroundColor: 'white',
-    zIndex: 3, // Ensures dropdown is above the map
-    borderRadius: 5,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.8,
-    shadowRadius: 3,
-    elevation: 5,
-  },
-  routeItem: {
-    padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
-  },
-  routeName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  modalOverlay: {
+  modalContent: {
     flex: 1,
     justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  modalContent: {
-    width: '80%',
+    alignItems: 'flex-start', // Align items to the left (start)
     padding: 20,
-    backgroundColor: 'white',
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  closeIcon: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
-  },
-  closeText: {
-    fontSize: 20,
-    fontWeight: 'bold',
   },
   modalTitle: {
-    fontSize: 18,
-    marginBottom: 20,
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 10,
+    textAlign: 'left', // Align title text to the left
+  },
+  modalText: {
+    fontSize: 14, // Smaller font size
+    color: '#fff',
+    marginVertical: 5,
+    textAlign: 'left', // Align text to the left
+  },
+  resetButton: {
+    position: 'absolute',
+    bottom: 20,
+    left: 20,
+    backgroundColor: 'blue',
+    paddingVertical: 8,
+    paddingHorizontal: 15,
+    borderRadius: 20,
+    zIndex: 100, // Ensures button is above the map
+  },
+  resetButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 14,
   },
 });
 
