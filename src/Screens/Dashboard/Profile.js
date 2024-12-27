@@ -72,7 +72,7 @@ const Profile = ({ route, navigation }) => {
   if (loading) {
     return (
       <View style={styles.loaderContainer}>
-        <ActivityIndicator size="large" color="#20B2AA" />
+        <ActivityIndicator size="large" color="#395bd5" />
       </View>
     );
   }
@@ -141,7 +141,7 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
-    backgroundColor: '#20B2AA',
+    backgroundColor: '#395bd5',
     paddingVertical: 20,
   },
   profileImage: {
@@ -178,18 +178,18 @@ const styles = StyleSheet.create({
   },
   detailText: {
     fontSize: 16,
-    color: '#15837d',
-    fontWeight:'bold',
+    color: '#216cca',
+    fontWeight: 'bold',
     marginBottom: 8,
   },
   pickerContainer: {
     height: 60,
     borderWidth: 1,
-    borderColor: '#15837d',
+    borderColor: '#216cca',
     borderRadius: 20, // Border radius applied to the container
     overflow: 'hidden', // This ensures the border radius works
-    backgroundColor: '#a2d9d4', // Background color for the picker container
-    marginTop:10,
+    backgroundColor: '#7cdcfe', // Background color for the picker container
+    marginTop: 10,
   },
   picker: {
     height: '100%', // Ensures the Picker takes up the full height of the container
@@ -231,8 +231,8 @@ const styles = StyleSheet.create({
     position: 'relative',
     bottom: 60,
     left: 80,
-    height:50,
-    width:50
+    height: 50,
+    width: 50,
   },
 });
 

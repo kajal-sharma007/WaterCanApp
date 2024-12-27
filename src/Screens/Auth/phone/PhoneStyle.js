@@ -105,6 +105,12 @@ const PhoneStyle = StyleSheet.create({
     backgroundColor: 'transparent',
     marginTop: 8,
   },
+  errorText: {
+    color: 'red', 
+    fontSize: 14, 
+    textAlign: 'center', 
+   
+  },
 });
 
 export default PhoneStyle;

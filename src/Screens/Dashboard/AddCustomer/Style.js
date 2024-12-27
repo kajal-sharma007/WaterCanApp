@@ -60,10 +60,10 @@ const Styles = StyleSheet.create({
     height: 60,
     width: '100%',
     borderWidth: 1,
-    borderColor: '#15837d',
+    borderColor: '#395bd5',
     borderRadius: 20, // Border radius applied to the container
     overflow: 'hidden', // This ensures the border radius works
-    backgroundColor: '#a2d9d4',
+    backgroundColor: '#7cdcfe',
     marginTop: 10,
   },
   footer: {
