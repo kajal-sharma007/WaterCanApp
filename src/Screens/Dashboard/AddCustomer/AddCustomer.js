@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   View,
   Text,
@@ -11,28 +11,44 @@ import {
   Platform,
   Alert,
 } from 'react-native';
-import { Picker } from '@react-native-picker/picker';
+import {Picker} from '@react-native-picker/picker';
 import Style from './Style';
-import { WIFI } from '../../constants/constants';
+import {WIFI} from '../../constants/constants';
+import Geolocation from '@react-native-community/geolocation'; // Import geolocation
 
-
-const AddCustomer = ({ route }) => {
+const AddCustomer = ({route}) => {
   const [customerName, setCustomerName] = useState('');
   const [mobileNo, setMobileNo] = useState('');
   const [address, setAddress] = useState('');
   const [email, setEmail] = useState('');
-  const [location, setLocation] = useState(null);
+  const [location, setLocation] = useState(null); // Store location
   const [adminOptions, setAdminOptions] = useState([]);
   const [selectedAdmin, setSelectedAdmin] = useState(null);
   const [adminRoutes, setAdminRoutes] = useState([]);
   const [selectedRouteId, setSelectedRouteId] = useState(null);
   const [successAddedCustomer, setSuccessAddedCustomer] = useState(false);
   const [notifyErr, setNotifyErr] = useState(false);
-  const { driverId } = route.params;
+  const {driverId} = route.params;
 
   useEffect(() => {
     console.log('Driver ID customer :', driverId);
   }, [driverId]);
+
+  useEffect(() => {
+    // Get the user's current location when the screen is loaded
+    Geolocation.getCurrentPosition(
+      position => {
+        const {latitude, longitude} = position.coords;
+        setLocation({latitude, longitude});
+        console.log('Current location:', latitude, longitude);
+      },
+      error => {
+        console.log('Error getting location:', error);
+        Alert.alert('Error', 'Failed to fetch current location');
+      },
+      {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000},
+    );
+  }, []);
 
   useEffect(() => {
     const fetchRoutes = async () => {
@@ -43,20 +59,15 @@ const AddCustomer = ({ route }) => {
 
         if (data && data.customersByRoute && data.customersByRoute[0].route) {
           const route = data.customersByRoute[0].route;
-          const routes = [{
-            id: route._id,
-            name: route.name,
-          }];
-
-          if (routes.length > 0) {
-            setAdminRoutes(routes);
-            console.log('Filtered Routes:', routes);
-          } else {
-            console.log('No routes found for this driverId');
-            setAdminRoutes([]);
-          }
+          const routes = [
+            {
+              id: route._id,
+              name: route.name,
+            },
+          ];
+          setAdminRoutes(routes);
         } else {
-          console.error('Invalid structure in fetched data:', data);
+          console.log('No routes found for this driverId');
           setAdminRoutes([]);
         }
       } catch (error) {
@@ -87,27 +98,25 @@ const AddCustomer = ({ route }) => {
         Alert.alert('Error', 'Failed to fetch admin options: ' + error.message);
       }
     };
+
     fetchAdminOptions();
   }, [driverId]);
 
-  // Handle real-time validation for customer name (allow only alphabets and spaces)
-  const handleCustomerNameChange = (text) => {
-    const namePattern = /^[A-Za-z\s]*$/;  // Allow only alphabets and spaces
+  const handleCustomerNameChange = text => {
+    const namePattern = /^[A-Za-z\s]*$/; // Allow only alphabets and spaces
     if (namePattern.test(text)) {
       setCustomerName(text);
     }
   };
 
-  // Handle real-time validation for mobile number (allow only numeric input)
-  const handleMobileNoChange = (text) => {
+  const handleMobileNoChange = text => {
     const mobilePattern = /^[0-9]*$/; // Allow only numbers
     if (mobilePattern.test(text)) {
       setMobileNo(text);
     }
   };
 
-  // Handle email input, no real-time restriction, but we will validate on submit
-  const handleEmailChange = (text) => {
+  const handleEmailChange = text => {
     setEmail(text);
   };
 
@@ -122,7 +131,7 @@ const AddCustomer = ({ route }) => {
       address: address,
       mobileNo: mobileNo,
       email: email,
-      location: location ? `${location.coords.latitude},${location.coords.longitude}` : '',
+      location: location ? `${location.latitude},${location.longitude}` : '',
       route: selectedRouteId,
     };
 
@@ -172,23 +181,22 @@ const AddCustomer = ({ route }) => {
     }
   };
 
-  // Validation function
   const validateFields = () => {
-    // Customer Name: Only alphabets and spaces allowed
     const namePattern = /^[A-Za-z\s]+$/;
     if (!namePattern.test(customerName)) {
-      Alert.alert('Invalid Customer Name', 'Customer name can only contain alphabets and spaces.');
+      Alert.alert(
+        'Invalid Customer Name',
+        'Customer name can only contain alphabets and spaces.',
+      );
       return false;
     }
 
-    // Mobile No: Only numeric and 10 digits
     const mobilePattern = /^[0-9]{10}$/;
     if (!mobilePattern.test(mobileNo)) {
       Alert.alert('Invalid Mobile No', 'Mobile number must be 10 digits.');
       return false;
     }
 
-    // Email: Simple validation
     const emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     if (!emailPattern.test(email)) {
       Alert.alert('Invalid Email', 'Please enter a valid email address.');
@@ -203,13 +211,12 @@ const AddCustomer = ({ route }) => {
     return true;
   };
 
- return (
-    <SafeAreaView style={{ flex: 1 }}>
+  return (
+    <SafeAreaView style={{flex: 1}}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={{ flex: 1 }}
-      >
-        <ScrollView contentContainerStyle={{ flexGrow: 1,}}>
+        style={{flex: 1}}>
+        <ScrollView contentContainerStyle={{flexGrow: 1}}>
           <View style={Style.container}>
             <Text style={Style.title}>CUSTOMER INFORMATION</Text>
 
@@ -241,17 +248,34 @@ const AddCustomer = ({ route }) => {
               keyboardType="email-address"
             />
 
+            {/* Display current location */}
+            {location ? (
+              <View style={Style.locationContainer}>
+                <Text style={Style.locationText}>
+                  Current Location: Lat: {location.latitude.toFixed(4)} | Long:{' '}
+                  {location.longitude.toFixed(4)}
+                </Text>
+              </View>
+            ) : (
+              <Text style={Style.locationText}>
+                Fetching current location...
+              </Text>
+            )}
+
             <Text style={Style.dropdownLabel}>Select Admin:</Text>
             <View style={Style.pickerContainer}>
               <Picker
                 selectedValue={selectedAdmin}
                 style={Style.picker}
-                onValueChange={(item) => setSelectedAdmin(item)}
-              >
+                onValueChange={item => setSelectedAdmin(item)}>
                 <Picker.Item label="Select admin" value={null} />
                 {Array.isArray(adminOptions) && adminOptions.length > 0 ? (
-                  adminOptions.map((item) => (
-                    <Picker.Item key={item._id} label={item.name} value={item._id} />
+                  adminOptions.map(item => (
+                    <Picker.Item
+                      key={item._id}
+                      label={item.name}
+                      value={item._id}
+                    />
                   ))
                 ) : (
                   <Picker.Item label="No admin available" value={null} />
@@ -264,12 +288,15 @@ const AddCustomer = ({ route }) => {
               <Picker
                 selectedValue={selectedRouteId}
                 style={Style.picker}
-                onValueChange={(itemValue) => setSelectedRouteId(itemValue)}
-              >
+                onValueChange={itemValue => setSelectedRouteId(itemValue)}>
                 <Picker.Item label="Select a route" value={null} />
                 {Array.isArray(adminRoutes) && adminRoutes.length > 0 ? (
-                  adminRoutes.map((route) => (
-                    <Picker.Item key={route.id} label={route.name} value={route.id} />
+                  adminRoutes.map(route => (
+                    <Picker.Item
+                      key={route.id}
+                      label={route.name}
+                      value={route.id}
+                    />
                   ))
                 ) : (
                   <Picker.Item label="No routes available" value={null} />
@@ -287,11 +314,12 @@ const AddCustomer = ({ route }) => {
               visible={successAddedCustomer}
               animationType="fade"
               transparent={true}
-              onRequestClose={() => setSuccessAddedCustomer(false)}
-            >
+              onRequestClose={() => setSuccessAddedCustomer(false)}>
               <View style={Style.modalOverlay}>
                 <View style={Style.modalContent}>
-                  <Text style={Style.modalText}>Customer Added Successfully!</Text>
+                  <Text style={Style.modalText}>
+                    Customer Added Successfully!
+                  </Text>
                 </View>
               </View>
             </Modal>
@@ -308,7 +336,6 @@ const AddCustomer = ({ route }) => {
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
-
 };
 
 export default AddCustomer;
