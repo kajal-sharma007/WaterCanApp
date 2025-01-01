@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -12,13 +12,25 @@ import {
   Platform,
   TouchableWithoutFeedback,
   Keyboard,
+  Modal,
 } from 'react-native';
-import {Card} from 'react-native-paper';
-import {WIFI} from '../../constants/constants';
+import { Card } from 'react-native-paper';
+import { WIFI } from '../../constants/constants';
 import styles from './styles';
 
-const EditTransactionScreen = ({route, closeModal}) => {
-  const {customerDetails, driverId} = route.params; // Destructure both customerDetails and driverId
+const CustomButton = ({ title, onPress, backgroundColor, textColor }) => {
+  return (
+    <TouchableOpacity
+      style={[styles.button, { backgroundColor }]}
+      onPress={onPress}
+    >
+      <Text style={[styles.buttonText, { color: textColor }]}>{title}</Text>
+    </TouchableOpacity>
+  );
+};
+
+const EditTransactionScreen = ({ route, navigation }) => {
+  const { customerDetails, driverId } = route.params;
 
   const [products, setProducts] = useState([]);
   const [productType, setProductType] = useState('');
@@ -30,10 +42,12 @@ const EditTransactionScreen = ({route, closeModal}) => {
   const [amountPaid, setAmountPaid] = useState('');
   const [delieverdAmt, setDelieverdAmt] = useState(0);
   const [dueAmt, setDueAmt] = useState(customerDetails.dueAmt);
-  const [bottleReturn, setBottleReturn] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState('');
   const [chips, setChips] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [txnDetails, setTxnDetails] = useState({});
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -62,7 +76,7 @@ const EditTransactionScreen = ({route, closeModal}) => {
     setIsDropdownOpen(!isDropdownOpen);
   };
 
-  const handleSelectItem = item => {
+  const handleSelectItem = (item) => {
     setSelectedItem(item.productName + ' - ' + item.productPrice);
     setCurrentPrice(parseFloat(item.productPrice));
     setIsDropdownOpen(false);
@@ -78,8 +92,7 @@ const EditTransactionScreen = ({route, closeModal}) => {
           bottlesReceived,
         },
       ]);
-      const totalPrice =
-        parseFloat(currentPrice) * parseFloat(bottlesDelivered);
+      const totalPrice = parseFloat(currentPrice) * parseFloat(bottlesDelivered);
       const newDeliveredAmt = delieverdAmt + totalPrice;
       setChips([...chips, selectedItem]);
       setDelieverdAmt(newDeliveredAmt);
@@ -89,44 +102,48 @@ const EditTransactionScreen = ({route, closeModal}) => {
 
   const handleSave = async () => {
     setShowTxnData(true);
+    setIsLoading(true);
 
     try {
       const newDueAmt =
-        parseFloat(delieverdAmt) + parseFloat(dueAmt) - parseFloat(amountPaid);
+        parseFloat(delieverdAmt) + parseFloat(customerDetails.customer.dueAmt) - parseFloat(amountPaid);
       setDueAmt(newDueAmt);
 
       const payload = {
-        customerId: customerDetails.id,
+        customerId: customerDetails.customer._id,
         combo: combo,
+        driverId: driverId,
         paymentTaken: amountPaid,
         dueAmount: newDueAmt,
         dateTime: new Date().toLocaleDateString(),
         productType: productType,
       };
+      console.log('payload:', payload);
 
       const response = await fetch(
-        `https://${WIFI}/api/customers/${customerDetails.id}/due-amount-update`,
+        `http://${WIFI}/api/customers/${customerDetails.customer._id}/due-amount-update`,
         {
           method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({newDueAmt}),
-        },
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ newDueAmt }),
+        }
       );
       const responseData = await response.json();
 
       const txnResponse = await fetch(
-        `http://${WIFI}/api/transaction/${driverId}`,
+        `http://${WIFI}/api/transaction/${customerDetails.customer.userId}`,
         {
           method: 'POST',
-          headers: {'Content-Type': 'application/json'},
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
-        },
+        }
       );
       const txnData = await txnResponse.json();
 
       if (txnData.success) {
         console.log('Transaction Successful.');
-        closeModal();
+        setTxnDetails(txnData.transaction);
+        setIsModalVisible(true);
       } else {
         console.error('Error while processing transaction');
       }
@@ -142,7 +159,33 @@ const EditTransactionScreen = ({route, closeModal}) => {
       }
     } catch (err) {
       console.error('Error while processing transaction:', err);
+    } finally {
+      setIsLoading(false);
     }
+  };
+
+  const closeModal = () => {
+    setIsModalVisible(false);
+    navigation.goBack();
+  };
+
+  // Reset fields function
+  const resetFields = () => {
+    setProductType('');
+    setBottlesReceived('');
+    setBottlesDelivered('');
+    setCurrentPrice('');
+    setCombo([]);
+    setAmountPaid('');
+    setDelieverdAmt(0);
+    setDueAmt(customerDetails.dueAmt);
+    setSelectedItem('');
+    setChips([]);
+  };
+
+  const handleCancel = () => {
+    resetFields(); // Reset all fields
+    navigation.goBack(); // Go back to the previous screen
   };
 
   return (
@@ -150,14 +193,15 @@ const EditTransactionScreen = ({route, closeModal}) => {
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={styles.innerContainer}>
           <KeyboardAvoidingView
-            style={{flex: 1}}
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+            style={{ flex: 1 }}
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          >
             <ScrollView contentContainerStyle={styles.scrollViewContent}>
               {!showTxnData ? (
                 <View style={styles.formContainer}>
                   <Text style={styles.title}>Edit Transaction</Text>
                   <Card style={styles.card}>
-                    <Card.Title title="Customer Details" />
+                    {/* <Card.Title title="Customer Details" /> */}
                     <Card.Content>
                       <Text style={styles.customerDetails}>
                         Customer: {customerDetails.name}
@@ -171,15 +215,16 @@ const EditTransactionScreen = ({route, closeModal}) => {
                       <Text style={styles.customerDetails}>
                         Email: {customerDetails.email}
                       </Text>
-                      <Text>Date: {new Date().toLocaleDateString()}</Text>
-                      <Text>Bottles Left: {customerDetails.bottlesLeft}</Text>
+                      <Text style={styles.customerDetails}>Date: {new Date().toLocaleDateString()}</Text>
+                      <Text style={styles.customerDetails}>Bottles Left: {customerDetails.customer.bottlesLeft}</Text>
                     </Card.Content>
                   </Card>
 
                   <Text style={styles.label}>Select Product Type</Text>
                   <TouchableOpacity
                     style={styles.input}
-                    onPress={handleToggleDropdown}>
+                    onPress={handleToggleDropdown}
+                  >
                     <Text style={styles.dropdownText}>
                       {selectedItem || 'Select product type'}
                     </Text>
@@ -188,11 +233,12 @@ const EditTransactionScreen = ({route, closeModal}) => {
                   {isDropdownOpen && (
                     <View style={styles.dropdownContainer}>
                       {Array.isArray(products) && products.length > 0 ? (
-                        products.map(item => (
+                        products.map((item) => (
                           <TouchableOpacity
                             key={item._id}
                             style={styles.dropdownItem}
-                            onPress={() => handleSelectItem(item)}>
+                            onPress={() => handleSelectItem(item)}
+                          >
                             <Text>{`${item.productName} - ${item.productPrice}`}</Text>
                           </TouchableOpacity>
                         ))
@@ -222,9 +268,10 @@ const EditTransactionScreen = ({route, closeModal}) => {
 
                   <View style={styles.buttonContainer}>
                     <TouchableOpacity
-                      style={styles.button1}
-                      onPress={handleAddChip}>
-                      <Text style={styles.buttonText}>Add Combo</Text>
+                      style={styles.addComboButton}
+                      onPress={handleAddChip}
+                    >
+                      <Text style={styles.addComboButtonText}>Add Combo</Text>
                     </TouchableOpacity>
                   </View>
 
@@ -244,33 +291,70 @@ const EditTransactionScreen = ({route, closeModal}) => {
                     keyboardType="numeric"
                   />
 
-                  <Text>Price: {delieverdAmt}</Text>
-                  <Text>Last Due Amount: {dueAmt}</Text>
-                  <Text>
-                    Total Payable Amount:{' '}
-                    {parseFloat(delieverdAmt) + parseFloat(dueAmt)}
-                  </Text>
-                  <Text>
-                    Current Due:{' '}
-                    {parseFloat(delieverdAmt) +
-                      parseFloat(dueAmt) -
-                      parseFloat(amountPaid)}
-                  </Text>
-
-                  <View style={styles.buttonContainer}>
+                  <View style={styles.tileContainer}>
+                    <Text style={styles.tileText}>Price: {delieverdAmt}</Text>
+                    <Text style={styles.tileText}>Last Due Amount: {customerDetails.customer.dueAmt}</Text>
+                    <Text style={styles.tileText}>
+                      Total Payable Amount:{' '}
+                      {parseFloat(delieverdAmt) + parseFloat(customerDetails.customer.dueAmt)}
+                    </Text>
+                    <Text style={styles.tileText}>
+                      Current Due:{' '}
+                      {parseFloat(delieverdAmt) +
+                        parseFloat(customerDetails.customer.dueAmt) -
+                        parseFloat(amountPaid)}
+                    </Text>
+                  </View>
+                  <View style={styles.buttonContainer1}>
+                    <CustomButton
+                      title="Order Delivered"
+                      onPress={handleSave}
+                      backgroundColor="green"
+                      textColor="white"
+                    />
+                    <CustomButton
+                      title="Cancel"
+                      onPress={handleCancel}
+                      backgroundColor="red"
+                      textColor="white"
+                    />
+                  </View>
+                  {/* <View style={styles.buttonContainer}>
+                    
                     <Button
                       title="Order Delivered"
-                      color="green"
+                      color="#079b02"
                       onPress={handleSave}
                     />
-                    <Button title="Cancel" color="red" onPress={closeModal} />
-                  </View>
+                    <Button title="Cancel" color="red" onPress={handleCancel} />
+                  </View> */}
                 </View>
-              ) : (
+              ) : isLoading ? (
                 <View style={styles.processTxn}>
                   <ActivityIndicator size="large" color="#0000ff" />
                   <Text>Transaction processing...</Text>
                 </View>
+              ) : (
+                <Modal
+                  visible={isModalVisible}
+                  animationType="slide"
+                  transparent={true}
+                  onRequestClose={closeModal}
+                >
+                  <View style={styles.modalBackground}>
+                    <View style={styles.modalContainer}>
+                      <Text style={styles.modalTitle}>Transaction Successful</Text>
+                      <Text>Transaction Date: {txnDetails.dateTime}</Text>
+                      <Text>Amount Paid: {txnDetails.paymentTaken}</Text>
+                      <Text>Due Amount: {txnDetails.dueAmount}</Text>
+                      <Text>Products:</Text>
+                      {txnDetails.combo && txnDetails.combo.map((item, index) => (
+                        <Text key={index}>{item.type} (Delivered: {item.bottlesDelivered})</Text>
+                      ))}
+                      <Button title="Close" onPress={closeModal} />
+                    </View>
+                  </View>
+                </Modal>
               )}
             </ScrollView>
           </KeyboardAvoidingView>
