@@ -15,10 +15,11 @@ import {
 } from 'react-native';
 import {Card} from 'react-native-paper';
 import {WIFI} from '../../constants/constants';
-import styles from './styles'; 
+import styles from './styles';
 
 const EditTransactionScreen = ({route, closeModal}) => {
-  const {customerDetails} = route.params;
+  const {customerDetails, driverId} = route.params; // Destructure both customerDetails and driverId
+
   const [products, setProducts] = useState([]);
   const [productType, setProductType] = useState('');
   const [bottlesReceived, setBottlesReceived] = useState('');
@@ -33,7 +34,6 @@ const EditTransactionScreen = ({route, closeModal}) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState('');
   const [chips, setChips] = useState([]);
-  const {driverId} = route.params;
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -51,6 +51,7 @@ const EditTransactionScreen = ({route, closeModal}) => {
         }
       } catch (err) {
         console.error('Error fetching products:', err);
+        alert(`Error fetching products: ${err.message}`);
         setProducts([]);
       }
     };
@@ -159,7 +160,7 @@ const EditTransactionScreen = ({route, closeModal}) => {
                     <Card.Title title="Customer Details" />
                     <Card.Content>
                       <Text style={styles.customerDetails}>
-                        Customer: {customerDetails.title}
+                        Customer: {customerDetails.name}
                       </Text>
                       <Text style={styles.customerDetails}>
                         Address: {customerDetails.address}

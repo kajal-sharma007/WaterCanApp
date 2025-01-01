@@ -16,6 +16,7 @@ import GetLocation from 'react-native-get-location';
 import {WIFI} from '../../constants/constants';
 import RouteStyles from './Styles';
 import RBSheet from 'react-native-raw-bottom-sheet'; // Bottom drawer library
+import {log, warn, error} from './logger'; // Import logger
 
 const Route = ({navigation, route}) => {
   const [state, setState] = useState({
@@ -43,8 +44,11 @@ const Route = ({navigation, route}) => {
   useEffect(() => {
     const fetchRoutes = async () => {
       try {
+        log('Fetching route data for driverId:', driverId); // Log the driverId
         const response = await fetch(`http://${WIFI}/api/route/${driverId}`);
         const data = await response.json();
+
+        log('Fetched Routes Data:', data); // Log fetched data
 
         if (data.customersByRoute.length > 0) {
           setState(prevState => ({
@@ -58,13 +62,16 @@ const Route = ({navigation, route}) => {
             error: 'No route data found',
             loading: false,
           }));
+          alert('No route data found. Please try again later.');
         }
       } catch (error) {
+        warn('Error fetching routes:', error.message); // Log warning for errors
         setState(prevState => ({
           ...prevState,
           error: error.message,
           loading: false,
         }));
+        alert('An error occurred while fetching route data.');
       }
     };
 
@@ -79,6 +86,7 @@ const Route = ({navigation, route}) => {
       maximumAge: 10000,
     })
       .then(location => {
+        log('User Location:', location); // Log the location
         setState(prevState => ({
           ...prevState,
           pickupCords: {
@@ -88,11 +96,13 @@ const Route = ({navigation, route}) => {
           },
         }));
       })
-      .catch(console.warn);
+      .catch(err => warn('Error getting location:', err)); // Log errors
   }, []);
 
   // Handle route selection (closes dropdown)
   const handleRouteSelect = routeData => {
+    log('Route selected:', routeData); // Log selected route
+
     const dropCords = routeData.marker
       .map(marker => {
         const customer = routeData.customerArr.find(
@@ -123,6 +133,9 @@ const Route = ({navigation, route}) => {
 
   // Handle marker selection (opens bottom sheet)
   const handleMarkerPress = index => {
+    log('Marker Pressed at index:', index); // Log marker press
+    log('Selected Drop Details:', state.selectedDropCords[index]); // Log drop details
+
     setState(prevState => ({
       ...prevState,
       selectedDropDetails: state.selectedDropCords[index],
@@ -134,6 +147,7 @@ const Route = ({navigation, route}) => {
   };
 
   const zoomToFitRoute = coordinates => {
+   
     if (mapRef.current) {
       mapRef.current.fitToCoordinates(coordinates, {
         edgePadding: {top: 50, bottom: 50, left: 50, right: 50},
@@ -144,6 +158,7 @@ const Route = ({navigation, route}) => {
 
   // Function to reset all selected locations
   const resetRoute = () => {
+    log('Resetting route'); // Log reset action
     setState(prevState => ({
       ...prevState,
       selectedRoute: null,
@@ -264,13 +279,19 @@ const Route = ({navigation, route}) => {
           <Text style={styles.modalText}>
             Email: {state.selectedDropDetails?.details.email}
           </Text>
+
+          {/* Add Customer ID here */}
+          <Text style={styles.modalText}>
+            Customer ID: {state.selectedDropDetails?.details?.customer?._id}
+          </Text>
+
           <Button
             title="Edit Transaction"
             onPress={() => {
               refRBSheet.current.close();
               navigation.navigate('EditTransactionScreen', {
                 customerDetails: state.selectedDropDetails?.details,
-                driverId,
+                driverId: driverId, // pass the driverId
               });
             }}
           />

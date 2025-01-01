@@ -20,10 +20,6 @@ const Home = ({navigation, route}) => {
   const {driverId} = route.params;
 
   useEffect(() => {
-    console.log('Driver ID Home:', driverId); // Log the driverId to confirm it is valid
-  }, [driverId]);
-
-  useEffect(() => {
     // Fetch the routes for the given driverId
     const fetchRoutes = async () => {
       try {
@@ -32,7 +28,7 @@ const Home = ({navigation, route}) => {
 
         const response = await fetch(`http://${WIFI}/api/route/${driverId}`);
         const data = await response.json();
-        console.log('Fetched data:', data); // Log the entire fetched data to inspect the structure
+       
 
         if (response.ok) {
           // Process the data from response
@@ -68,7 +64,7 @@ const Home = ({navigation, route}) => {
   };
 
   const renderRouteItem = ({item}) => {
-    console.log('data', item); // Log each item to check the structure
+    
 
     return (
       <TouchableOpacity
