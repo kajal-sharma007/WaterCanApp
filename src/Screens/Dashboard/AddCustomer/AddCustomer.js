@@ -262,26 +262,6 @@ const AddCustomer = ({route}) => {
               </Text>
             )}
 
-            <Text style={Style.dropdownLabel}>Select Admin:</Text>
-            <View style={Style.pickerContainer}>
-              <Picker
-                selectedValue={selectedAdmin}
-                style={Style.picker}
-                onValueChange={item => setSelectedAdmin(item)}>
-                <Picker.Item label="Select admin" value={null} />
-                {Array.isArray(adminOptions) && adminOptions.length > 0 ? (
-                  adminOptions.map(item => (
-                    <Picker.Item
-                      key={item._id}
-                      label={item.name}
-                      value={item._id}
-                    />
-                  ))
-                ) : (
-                  <Picker.Item label="No admin available" value={null} />
-                )}
-              </Picker>
-            </View>
 
             <Text style={Style.dropdownLabel}>Select Route:</Text>
             <View style={Style.pickerContainer}>

@@ -1,2 +1,2 @@
 export const YOUR_GOOGLE_MAPS_API_KEY = 'AIzaSyDNtMhAj4UVyV4nfS9NV5JC9qBTcFYxgOc';
-export const WIFI = '192.168.238.233:9000';
+export const WIFI = '192.168.16.233:9000';
