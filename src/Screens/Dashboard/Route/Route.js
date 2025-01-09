@@ -214,6 +214,7 @@ const Route = ({navigation, route}) => {
             coordinate={state.pickupCords}
             title="Pickup"
             image={imagePath.icBike}
+            style={{ width: 20, height: 20 }}
           />
           {state.selectedDropCords.map((drop, index) => (
             <Marker
@@ -221,6 +222,7 @@ const Route = ({navigation, route}) => {
               coordinate={drop}
               title={drop.details?.name}
               image={imagePath.locationmarker}
+              style={{ width: 20, height: 20 }}
               onPress={() => handleMarkerPress(index)}
             />
           ))}

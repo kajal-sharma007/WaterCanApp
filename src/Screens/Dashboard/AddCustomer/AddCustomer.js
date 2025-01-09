@@ -35,8 +35,7 @@ const AddCustomer = ({route}) => {
   }, [driverId]);
 
   useEffect(() => {
-    // Get the user's current location when the screen is loaded
-    Geolocation.getCurrentPosition(
+    const watchId = Geolocation.watchPosition(
       position => {
         const {latitude, longitude} = position.coords;
         setLocation({latitude, longitude});
@@ -46,9 +45,14 @@ const AddCustomer = ({route}) => {
         console.log('Error getting location:', error);
         Alert.alert('Error', 'Failed to fetch current location');
       },
-      {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000},
+      {enableHighAccuracy: true, distanceFilter: 10, timeout: 30000, maximumAge: 10000}
     );
+  
+    return () => {
+      Geolocation.clearWatch(watchId);
+    };
   }, []);
+  
 
   useEffect(() => {
     const fetchRoutes = async () => {
