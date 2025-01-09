@@ -144,7 +144,7 @@ const ConnectWithPhone = () => {
       navigation.navigate('TabNav', {driverId});
     } catch (error) {
       console.error('Network error:', error);
-      alert('An error occurred. Please try again later.');
+      alert(`An error occurred. Please try again later.${error}`);
     }
   };
 
