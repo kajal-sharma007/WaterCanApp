@@ -139,7 +139,7 @@ const AddCustomer = ({route}) => {
 
     try {
       const response = await fetch(
-        `http://${WIFI}/api/customers/to/${selectedAdmin}`,
+        `http://${WIFI}/api/customers/to/${selectedRouteId}`,
         {
           method: 'POST',
           headers: {
@@ -203,8 +203,8 @@ const AddCustomer = ({route}) => {
       return false;
     }
 
-    if (!selectedRouteId || !selectedAdmin) {
-      Alert.alert('Error', 'Please select both a route and an admin.');
+    if (!selectedRouteId) {
+      Alert.alert('Error', 'Please select a route.');
       return false;
     }
 
@@ -248,7 +248,6 @@ const AddCustomer = ({route}) => {
               keyboardType="email-address"
             />
 
-            {/* Display current location */}
             {location ? (
               <View style={Style.locationContainer}>
                 <Text style={Style.locationText}>
