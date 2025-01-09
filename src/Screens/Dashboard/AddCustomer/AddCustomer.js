@@ -165,7 +165,7 @@ const AddCustomer = ({route}) => {
           setMobileNo('');
           setAddress('');
           setEmail('');
-          setSelectedAdmin(null);
+          // setSelectedAdmin(null);
           setSelectedRouteId(null);
           setLocation(null);
         }, 3000);
