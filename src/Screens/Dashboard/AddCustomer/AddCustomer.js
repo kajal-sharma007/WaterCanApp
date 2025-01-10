@@ -17,6 +17,7 @@ import {WIFI} from '../../constants/constants';
 import Geolocation from '@react-native-community/geolocation'; // Import geolocation
 
 const AddCustomer = ({route}) => {
+  const {driverId} = route.params;
   const [customerName, setCustomerName] = useState('');
   const [mobileNo, setMobileNo] = useState('');
   const [address, setAddress] = useState('');
@@ -28,7 +29,6 @@ const AddCustomer = ({route}) => {
   const [selectedRouteId, setSelectedRouteId] = useState(null);
   const [successAddedCustomer, setSuccessAddedCustomer] = useState(false);
   const [notifyErr, setNotifyErr] = useState(false);
-  const {driverId} = route.params;
 
   useEffect(() => {
     console.log('Driver ID customer :', driverId);
@@ -143,7 +143,7 @@ const AddCustomer = ({route}) => {
 
     try {
       const response = await fetch(
-        `http://${WIFI}/api/customers/to/${selectedRouteId}`,
+        `http://${WIFI}/api/customers/to/${driverId}`,
         {
           method: 'POST',
           headers: {
