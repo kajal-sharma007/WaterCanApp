@@ -40,23 +40,23 @@ const Profile = ({ route, navigation }) => {
     fetchProfileData();
   }, [driverId]);
 
-  const handleLogout = async () => {
-    try {
-      const response = await fetch(`http://${WIFI}/api/delete-driver/${driverId}`, {
-        method: 'DELETE',
-      });
-      
-      if (!response.ok) {
-        throw new Error('Logout failed');
-      }
+ const handleLogout = async () => {
+   try {
+     // Clear any stored authentication tokens or session data
+     // Example: If you're using AsyncStorage to store tokens
+     // await AsyncStorage.removeItem('authToken');
 
-      alert('You have logged out successfully.');
-      navigation.navigate('Onboarding');
-    } catch (error) {
-      console.error('Error during logout:', error);
-      alert('Error logging out. Please try again.');
-    }
-  };
+     // Optionally, you could reset any global state used for authentication
+     // Example: If you're using Redux or context, reset the auth state
+
+     alert('You have logged out successfully.');
+     navigation.navigate('Onboarding'); // Redirect to the onboarding screen or login page
+   } catch (error) {
+     console.error('Error during logout:', error);
+     alert('Error logging out. Please try again.');
+   }
+ };
+
 
   // Function to handle image selection
   const selectProfileImage = () => {

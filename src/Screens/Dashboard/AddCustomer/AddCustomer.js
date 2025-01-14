@@ -9,34 +9,32 @@ import {
   SafeAreaView,
   ScrollView,
   Platform,
-  Alert,
+  ActivityIndicator, // Import ActivityIndicator for loader
 } from 'react-native';
 import {Picker} from '@react-native-picker/picker';
+import Snackbar from 'react-native-snackbar'; // Import react-native-snackbar
 import Style from './Style';
 import {WIFI} from '../../constants/constants';
 import Geolocation from '@react-native-community/geolocation'; // Import geolocation
 
 const AddCustomer = ({route}) => {
+  const {driverId} = route.params;
   const [customerName, setCustomerName] = useState('');
   const [mobileNo, setMobileNo] = useState('');
   const [address, setAddress] = useState('');
   const [email, setEmail] = useState('');
   const [location, setLocation] = useState(null); // Store location
-  const [adminOptions, setAdminOptions] = useState([]);
-  const [selectedAdmin, setSelectedAdmin] = useState(null);
   const [adminRoutes, setAdminRoutes] = useState([]);
   const [selectedRouteId, setSelectedRouteId] = useState(null);
   const [successAddedCustomer, setSuccessAddedCustomer] = useState(false);
-  const [notifyErr, setNotifyErr] = useState(false);
-  const {driverId} = route.params;
+  const [isLoading, setIsLoading] = useState(false); // Loading state for loader
 
   useEffect(() => {
     console.log('Driver ID customer :', driverId);
   }, [driverId]);
 
   useEffect(() => {
-    // Get the user's current location when the screen is loaded
-    Geolocation.getCurrentPosition(
+    const watchId = Geolocation.watchPosition(
       position => {
         const {latitude, longitude} = position.coords;
         setLocation({latitude, longitude});
@@ -44,10 +42,23 @@ const AddCustomer = ({route}) => {
       },
       error => {
         console.log('Error getting location:', error);
-        Alert.alert('Error', 'Failed to fetch current location');
+        Snackbar.show({
+          text: 'Failed to fetch current location',
+          backgroundColor: 'red',
+          duration: 2000,
+        });
       },
-      {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000},
+      {
+        enableHighAccuracy: true,
+        distanceFilter: 10,
+        timeout: 30000,
+        maximumAge: 10000,
+      },
     );
+
+    return () => {
+      Geolocation.clearWatch(watchId);
+    };
   }, []);
 
   useEffect(() => {
@@ -72,34 +83,15 @@ const AddCustomer = ({route}) => {
         }
       } catch (error) {
         console.error('Error fetching route options:', error);
-        Alert.alert('Error', 'Failed to fetch route options: ' + error.message);
-        setAdminRoutes([]);
+        Snackbar.show({
+          text: 'Failed to fetch route options.',
+          backgroundColor: 'red',
+          duration: 2000,
+        });
       }
     };
 
     fetchRoutes();
-  }, [driverId]);
-
-  useEffect(() => {
-    const fetchAdminOptions = async () => {
-      try {
-        const response = await fetch(
-          `http://${WIFI}/api/get-all-admin-assigned/to/${driverId}`,
-        );
-        if (!response.ok) {
-          throw new Error(
-            `Failed to fetch admin options, status: ${response.status}`,
-          );
-        }
-        const data = await response.json();
-        setAdminOptions(data.users);
-      } catch (error) {
-        console.error('Error fetching admin options:', error);
-        Alert.alert('Error', 'Failed to fetch admin options: ' + error.message);
-      }
-    };
-
-    fetchAdminOptions();
   }, [driverId]);
 
   const handleCustomerNameChange = text => {
@@ -137,9 +129,11 @@ const AddCustomer = ({route}) => {
 
     console.log('Payload:', payload);
 
+    setIsLoading(true); // Start loading
+
     try {
       const response = await fetch(
-        `http://${WIFI}/api/customers/to/${selectedAdmin}`,
+        `http://${WIFI}/api/customers/to/${driverId}`,
         {
           method: 'POST',
           headers: {
@@ -152,59 +146,82 @@ const AddCustomer = ({route}) => {
       const data = await response.json();
       console.log('API Response:', data);
 
+      setIsLoading(false); // End loading
+
       if (data.success) {
         console.log('Customer Added ✅');
         setSuccessAddedCustomer(true);
+        Snackbar.show({
+          text: 'Customer Added Successfully!',
+          backgroundColor: 'green',
+          duration: 2000,
+        });
         setTimeout(() => {
           setSuccessAddedCustomer(false);
           setCustomerName('');
           setMobileNo('');
           setAddress('');
           setEmail('');
-          setSelectedAdmin(null);
           setSelectedRouteId(null);
           setLocation(null);
         }, 3000);
       } else {
         console.log('Customer not added ❌');
-        setNotifyErr(true);
-        setTimeout(() => {
-          setNotifyErr(false);
-        }, 4000);
+        setIsLoading(false); // End loading
+        Snackbar.show({
+          text: `Customer with ${email} already existed, try with a different Email Id.`,
+          backgroundColor: 'red',
+          duration: 3000,
+        });
       }
     } catch (err) {
       console.log('Error adding customer from mobile:', err);
-      setNotifyErr(true);
-      setTimeout(() => {
-        setNotifyErr(false);
-      }, 4000);
+      setIsLoading(false); // End loading
+      Snackbar.show({
+        text: 'Something went wrong, please try again.',
+        backgroundColor: 'red',
+        duration: 3000,
+      });
     }
   };
 
   const validateFields = () => {
     const namePattern = /^[A-Za-z\s]+$/;
     if (!namePattern.test(customerName)) {
-      Alert.alert(
-        'Invalid Customer Name',
-        'Customer name can only contain alphabets and spaces.',
-      );
+      Snackbar.show({
+        text: 'Customer name can only contain alphabets and spaces.',
+        backgroundColor: 'red',
+        duration: 3000,
+      });
       return false;
     }
 
     const mobilePattern = /^[0-9]{10}$/;
     if (!mobilePattern.test(mobileNo)) {
-      Alert.alert('Invalid Mobile No', 'Mobile number must be 10 digits.');
+      Snackbar.show({
+        text: 'Mobile number must be 10 digits.',
+        backgroundColor: 'red',
+        duration: 3000,
+      });
       return false;
     }
 
     const emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     if (!emailPattern.test(email)) {
-      Alert.alert('Invalid Email', 'Please enter a valid email address.');
+      Snackbar.show({
+        text: 'Please enter a valid email address.',
+        backgroundColor: 'red',
+        duration:3000,
+      });
       return false;
     }
 
-    if (!selectedRouteId || !selectedAdmin) {
-      Alert.alert('Error', 'Please select both a route and an admin.');
+    if (!selectedRouteId) {
+      Snackbar.show({
+        text: 'Please select a route.',
+        backgroundColor: 'red',
+        duration: 3000,
+      });
       return false;
     }
 
@@ -248,7 +265,6 @@ const AddCustomer = ({route}) => {
               keyboardType="email-address"
             />
 
-            {/* Display current location */}
             {location ? (
               <View style={Style.locationContainer}>
                 <Text style={Style.locationText}>
@@ -261,7 +277,6 @@ const AddCustomer = ({route}) => {
                 Fetching current location...
               </Text>
             )}
-
 
             <Text style={Style.dropdownLabel}>Select Route:</Text>
             <View style={Style.pickerContainer}>
@@ -286,10 +301,15 @@ const AddCustomer = ({route}) => {
 
             <View style={Style.footer}>
               <TouchableOpacity style={Style.button1} onPress={handleSubmit}>
-                <Text style={Style.buttonText}>Add Customer</Text>
+                {isLoading ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text style={Style.buttonText}>Add Customer</Text>
+                )}
               </TouchableOpacity>
             </View>
 
+            {/* Modal for success */}
             <Modal
               visible={successAddedCustomer}
               animationType="fade"
@@ -303,14 +323,6 @@ const AddCustomer = ({route}) => {
                 </View>
               </View>
             </Modal>
-
-            {notifyErr && (
-              <View style={Style.error}>
-                <Text style={Style.errorText}>
-                  {`Customer with ${email} already existed, try with a different Email Id.`}
-                </Text>
-              </View>
-            )}
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
