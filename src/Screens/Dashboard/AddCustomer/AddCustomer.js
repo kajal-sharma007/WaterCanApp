@@ -309,20 +309,6 @@ const AddCustomer = ({route}) => {
               </TouchableOpacity>
             </View>
 
-            {/* Modal for success */}
-            <Modal
-              visible={successAddedCustomer}
-              animationType="fade"
-              transparent={true}
-              onRequestClose={() => setSuccessAddedCustomer(false)}>
-              <View style={Style.modalOverlay}>
-                <View style={Style.modalContent}>
-                  <Text style={Style.modalText}>
-                    Customer Added Successfully!
-                  </Text>
-                </View>
-              </View>
-            </Modal>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>

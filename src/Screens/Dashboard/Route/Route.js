@@ -15,8 +15,8 @@ import imagePath from '../../constants/imagePath';
 import GetLocation from 'react-native-get-location';
 import {WIFI} from '../../constants/constants';
 import RouteStyles from './Styles';
-import RBSheet from 'react-native-raw-bottom-sheet'; // Bottom drawer library
-import {log, warn, error} from './logger'; // Import logger
+import RBSheet from 'react-native-raw-bottom-sheet';
+import {log, warn, error} from './logger';
 
 const Route = ({navigation, route}) => {
   const [state, setState] = useState({
@@ -37,18 +37,14 @@ const Route = ({navigation, route}) => {
   });
 
   const mapRef = useRef(null);
-  const refRBSheet = useRef(); // Reference for Bottom Drawer
+  const refRBSheet = useRef();
   const {driverId} = route.params;
 
-  // Fetch route data from API
   useEffect(() => {
     const fetchRoutes = async () => {
       try {
-        log('Fetching route data for driverId:', driverId); // Log the driverId
         const response = await fetch(`http://${WIFI}/api/route/${driverId}`);
         const data = await response.json();
-
-        log('Fetched Routes Data:', data); // Log fetched data
 
         if (data.customersByRoute.length > 0) {
           setState(prevState => ({
@@ -65,7 +61,7 @@ const Route = ({navigation, route}) => {
           alert('No route data found. Please try again later.');
         }
       } catch (error) {
-        warn('Error fetching routes:', error.message); // Log warning for errors
+        warn('Error fetching routes:', error.message);
         setState(prevState => ({
           ...prevState,
           error: error.message,
@@ -78,7 +74,6 @@ const Route = ({navigation, route}) => {
     fetchRoutes();
   }, [driverId]);
 
-  // Get current location of the user
   useEffect(() => {
     GetLocation.getCurrentPosition({
       enableHighAccuracy: true,
@@ -86,7 +81,6 @@ const Route = ({navigation, route}) => {
       maximumAge: 10000,
     })
       .then(location => {
-        log('User Location:', location); // Log the location
         setState(prevState => ({
           ...prevState,
           pickupCords: {
@@ -96,13 +90,10 @@ const Route = ({navigation, route}) => {
           },
         }));
       })
-      .catch(err => warn('Error getting location:', err)); // Log errors
+      .catch(err => warn('Error getting location:', err));
   }, []);
 
-  // Handle route selection (closes dropdown)
   const handleRouteSelect = routeData => {
-    log('Route selected:', routeData); // Log selected route
-
     const dropCords = routeData.marker
       .map(marker => {
         const customer = routeData.customerArr.find(
@@ -124,30 +115,23 @@ const Route = ({navigation, route}) => {
       selectedDropCords: dropCords,
     }));
 
-    // Close dropdown after selection
     setState(prevState => ({
       ...prevState,
       dropdownVisible: false,
     }));
   };
 
-  // Handle marker selection (opens bottom sheet)
   const handleMarkerPress = index => {
-    log('Marker Pressed at index:', index); // Log marker press
-    log('Selected Drop Details:', state.selectedDropCords[index]); // Log drop details
-
     setState(prevState => ({
       ...prevState,
       selectedDropDetails: state.selectedDropCords[index],
       selectedDropIndex: index,
     }));
 
-    // Open the bottom drawer
     refRBSheet.current.open();
   };
 
   const zoomToFitRoute = coordinates => {
-   
     if (mapRef.current) {
       mapRef.current.fitToCoordinates(coordinates, {
         edgePadding: {top: 50, bottom: 50, left: 50, right: 50},
@@ -156,9 +140,7 @@ const Route = ({navigation, route}) => {
     }
   };
 
-  // Function to reset all selected locations
   const resetRoute = () => {
-    log('Resetting route'); // Log reset action
     setState(prevState => ({
       ...prevState,
       selectedRoute: null,
@@ -171,7 +153,6 @@ const Route = ({navigation, route}) => {
   return (
     <SafeAreaView style={{flex: 1}}>
       <View style={{flex: 1}}>
-        {/* Dropdown for selecting route */}
         <TouchableOpacity
           style={RouteStyles.dropdownButton}
           onPress={() =>
@@ -187,7 +168,6 @@ const Route = ({navigation, route}) => {
           </Text>
         </TouchableOpacity>
 
-        {/* Dropdown menu */}
         {state.dropdownVisible && (
           <View style={RouteStyles.dropdownContainer}>
             <FlatList
@@ -204,7 +184,6 @@ const Route = ({navigation, route}) => {
           </View>
         )}
 
-        {/* Map View */}
         <MapView
           style={RouteStyles.mapContainer}
           initialRegion={state.pickupCords}
@@ -238,21 +217,19 @@ const Route = ({navigation, route}) => {
           )}
         </MapView>
 
-        {/* Reset Button */}
         <TouchableOpacity style={styles.resetButton} onPress={resetRoute}>
           <Text style={styles.resetButtonText}>Reset</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Bottom Drawer for showing marker details */}
       <RBSheet
         ref={refRBSheet}
-        height={250} // Adjust height of the drawer as needed
+        height={250}
         openDuration={250}
         closeOnDragDown={true}
         customStyles={{
           container: {
-            backgroundColor: '#141414', // Dark background, like Netflix
+            backgroundColor: '#141414',
             borderTopLeftRadius: 20,
             borderTopRightRadius: 20,
             padding: 20,
@@ -280,7 +257,6 @@ const Route = ({navigation, route}) => {
             Email: {state.selectedDropDetails?.details.email}
           </Text>
 
-          {/* Add Customer ID here */}
           <Text style={styles.modalText}>
             Customer ID: {state.selectedDropDetails?.details?.customer?._id}
           </Text>
@@ -291,7 +267,7 @@ const Route = ({navigation, route}) => {
               refRBSheet.current.close();
               navigation.navigate('EditTransactionScreen', {
                 customerDetails: state.selectedDropDetails?.details,
-                driverId: driverId, // pass the driverId
+                driverId: driverId,
               });
             }}
           />
@@ -305,7 +281,7 @@ const styles = StyleSheet.create({
   modalContent: {
     flex: 1,
     justifyContent: 'center',
-    alignItems: 'flex-start', // Align items to the left (start)
+    alignItems: 'flex-start',
     padding: 20,
   },
   modalTitle: {
@@ -313,13 +289,13 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#fff',
     marginBottom: 10,
-    textAlign: 'left', // Align title text to the left
+    textAlign: 'left',
   },
   modalText: {
-    fontSize: 14, // Smaller font size
+    fontSize: 14,
     color: '#fff',
     marginVertical: 5,
-    textAlign: 'left', // Align text to the left
+    textAlign: 'left',
   },
   resetButton: {
     position: 'absolute',
@@ -329,7 +305,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 15,
     borderRadius: 20,
-    zIndex: 100, // Ensures button is above the map
+    zIndex: 100,
   },
   resetButtonText: {
     color: '#fff',
