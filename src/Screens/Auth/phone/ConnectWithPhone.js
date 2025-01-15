@@ -18,7 +18,8 @@ import logo from '../../../assets/logo1.jpg';
 import Email from '../../../assets/Svg/Email';
 import {useNavigation} from '@react-navigation/native';
 import PhoneStyle from './PhoneStyle';
-import { WIFI } from '../../constants/constants';
+import {WIFI} from '../../constants/constants';
+import Snackbar from 'react-native-snackbar'; // Import Snackbar
 
 const {width, height} = Dimensions.get('window');
 
@@ -58,8 +59,6 @@ const CustomButton = ({icon: Icon, title, onPress}) => {
   );
 };
 
-
-
 // Green Button Component
 const GreenButton = ({title, onPress}) => {
   return (
@@ -72,8 +71,6 @@ const GreenButton = ({title, onPress}) => {
 const ConnectWithPhone = () => {
   const navigation = useNavigation();
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [phoneError, setPhoneError] = useState('');
-  const [placeholderTop] = useState(new Animated.Value(20));
 
   // Regular expression for phone number validation (e.g., 10 digits)
   const phoneRegex = /^[0-9]{10}$/;
@@ -96,45 +93,46 @@ const ConnectWithPhone = () => {
   }, []);
 
   // Function to handle the input change and allow only numeric characters
-  const handlePhoneChange = (input) => {
-    // Allow only numeric characters
+  const handlePhoneChange = input => {
     const numericInput = input.replace(/[^0-9]/g, '');
     setPhoneNumber(numericInput);
-
-    // Clear the error message when exactly 10 digits are entered
-    if (numericInput.length === 10) {
-      setPhoneError('');
-    }
   };
 
   // Function to verify the driver
   const verifyDriver = async () => {
     if (phoneNumber.length < 10) {
-      setPhoneError('Please enter a valid 10-digit phone number');
+      Snackbar.show({
+        text: 'Please enter a valid 10-digit phone number',
+        duration: Snackbar.LENGTH_SHORT,
+        backgroundColor: 'red',
+      });
       return;
     } else if (!phoneRegex.test(phoneNumber)) {
-      setPhoneError('Phone number must be exactly 10 digits');
+      Snackbar.show({
+        text: 'Phone number must be exactly 10 digits',
+        duration: Snackbar.LENGTH_SHORT,
+        backgroundColor: 'red',
+      });
       return;
     }
 
-    setPhoneError(''); // Clear error if phone number is valid
-
     try {
-      const response = await fetch(
-        `http://${WIFI}/api/verify-driver`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({mobileNo: phoneNumber}),
+      const response = await fetch(`http://${WIFI}/api/verify-driver`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-      );
+        body: JSON.stringify({mobileNo: phoneNumber}),
+      });
 
       if (!response.ok) {
         const errorData = await response.json();
         console.error('Error response:', errorData);
-        alert(errorData.message || 'Verification failed');
+        Snackbar.show({
+          text: errorData.message || 'Verification failed',
+          duration: Snackbar.LENGTH_SHORT,
+          backgroundColor: 'red',
+        });
         return;
       }
 
@@ -144,7 +142,11 @@ const ConnectWithPhone = () => {
       navigation.navigate('TabNav', {driverId});
     } catch (error) {
       console.error('Network error:', error);
-      alert(`An error occurred. Please try again later.${error}`);
+      Snackbar.show({
+        text: `An error occurred. Please try again later. ${error}`,
+        duration: Snackbar.LENGTH_SHORT,
+        backgroundColor: 'red',
+      });
     }
   };
 
@@ -166,11 +168,10 @@ const ConnectWithPhone = () => {
             <FloatingLabelInput
               label="Enter Phone Number"
               keyboardType="phone-pad"
-              maxLength={10} // Restrict input to 10 digits
+              maxLength={10}
               value={phoneNumber}
-              onChangeText={handlePhoneChange} // Call the handler that only accepts numeric input
+              onChangeText={handlePhoneChange}
             />
-            {phoneError ? <Text style={PhoneStyle.errorText}>{phoneError}</Text> : null}
           </View>
 
           <View style={PhoneStyle.buttonContainer}>

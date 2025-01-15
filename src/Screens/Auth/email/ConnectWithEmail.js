@@ -10,7 +10,6 @@ import {
   Platform,
   ScrollView,
   Keyboard,
-  Alert,
 } from 'react-native';
 import React, {useState, useEffect} from 'react';
 import logo from '../../../assets/logo1.jpg';
@@ -19,7 +18,8 @@ import {useNavigation} from '@react-navigation/native';
 import CommonButton from '../../../component/button';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import styles from './styles';
-import { WIFI } from '../../constants/constants';
+import {WIFI} from '../../constants/constants';
+import Snackbar from 'react-native-snackbar'; // Import Snackbar
 
 const {width, height} = Dimensions.get('window');
 
@@ -35,7 +35,9 @@ const FloatingLabelInput = ({
 
   return (
     <View style={styles.floatingLabelContainer}>
-      <Text style={[styles.floatingLabel, {top: isFocused || value ? -2 : 19}]}>{label}</Text>
+      <Text style={[styles.floatingLabel, {top: isFocused || value ? -2 : 19}]}>
+        {label}
+      </Text>
       <View style={styles.inputWrapper}>
         <TextInput
           style={styles.input}
@@ -97,7 +99,7 @@ const ConnectWithEmail = () => {
   }, []);
 
   // Validate email format
-  const validateEmail = (email) => {
+  const validateEmail = email => {
     const emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
     return emailPattern.test(email);
   };
@@ -105,26 +107,27 @@ const ConnectWithEmail = () => {
   const handleLogin = async () => {
     // Check if email is valid
     if (!validateEmail(email)) {
-      Alert.alert('Invalid Email', 'Please enter a valid email address.');
+      Snackbar.show({
+        text: 'Please enter a valid email address.',
+        duration: Snackbar.LENGTH_SHORT,
+        backgroundColor: 'red',
+      });
       return;
     }
 
     try {
       console.log('Login Request Data:', {email, password: Password});
 
-      const response = await fetch(
-        `http://${WIFI}/api/verify-driver`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            email,
-            password: Password,
-          }),
+      const response = await fetch(`http://${WIFI}/api/verify-driver`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-      );
+        body: JSON.stringify({
+          email,
+          password: Password,
+        }),
+      });
 
       console.log('Server Response Status:', response.status);
       const result = await response.json();
@@ -136,21 +139,27 @@ const ConnectWithEmail = () => {
         navigation.navigate('TabNav', {driverId});
       } else {
         console.error('Error Response:', result);
-        Alert.alert('Login failed', result.message || 'Invalid credentials');
+        Snackbar.show({
+          text: result.message || 'Invalid credentials',
+          duration: Snackbar.LENGTH_SHORT,
+          backgroundColor: 'red',
+        });
       }
     } catch (error) {
       console.error('Error during login:', error);
 
       if (error.name === 'TypeError') {
-        Alert.alert(
-          'Network Error',
-          'There was an issue connecting to the server. Please check your connection and try again.',
-        );
+        Snackbar.show({
+          text: 'Network error. Please check your connection and try again.',
+          duration: Snackbar.LENGTH_SHORT,
+          backgroundColor: 'red',
+        });
       } else {
-        Alert.alert(
-          'Login failed',
-          'An unexpected error occurred while trying to log in.',
-        );
+        Snackbar.show({
+          text: 'An unexpected error occurred during login.',
+          duration: Snackbar.LENGTH_SHORT,
+          backgroundColor: 'red',
+        });
       }
     }
   };

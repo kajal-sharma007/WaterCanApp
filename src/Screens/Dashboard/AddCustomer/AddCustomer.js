@@ -4,44 +4,41 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  Modal,
+  ActivityIndicator,
   KeyboardAvoidingView,
   SafeAreaView,
   ScrollView,
   Platform,
-  ActivityIndicator, // Import ActivityIndicator for loader
 } from 'react-native';
 import {Picker} from '@react-native-picker/picker';
-import Snackbar from 'react-native-snackbar'; // Import react-native-snackbar
+import Snackbar from 'react-native-snackbar';
+import Geolocation from '@react-native-community/geolocation';
 import Style from './Style';
-import {WIFI} from '../../constants/constants';
-import Geolocation from '@react-native-community/geolocation'; // Import geolocation
+import {WIFI, YOUR_GOOGLE_MAPS_API_KEY} from '../../constants/constants'; // Import your API key
+import MapView, {Marker} from 'react-native-maps'; // Google Maps Component
 
 const AddCustomer = ({route}) => {
   const {driverId} = route.params;
-  const [customerName, setCustomerName] = useState('');
-  const [mobileNo, setMobileNo] = useState('');
-  const [address, setAddress] = useState('');
-  const [email, setEmail] = useState('');
-  const [location, setLocation] = useState(null); // Store location
+  const [formData, setFormData] = useState({
+    customerName: '',
+    mobileNo: '',
+    address: '',
+    email: '',
+    selectedRouteId: null,
+  });
+  const [location, setLocation] = useState(null);
   const [adminRoutes, setAdminRoutes] = useState([]);
-  const [selectedRouteId, setSelectedRouteId] = useState(null);
-  const [successAddedCustomer, setSuccessAddedCustomer] = useState(false);
-  const [isLoading, setIsLoading] = useState(false); // Loading state for loader
+  const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    console.log('Driver ID customer :', driverId);
-  }, [driverId]);
-
-  useEffect(() => {
-    const watchId = Geolocation.watchPosition(
+  const fetchLocation = () => {
+    console.log('Fetching location...');
+    Geolocation.getCurrentPosition(
       position => {
-        const {latitude, longitude} = position.coords;
-        setLocation({latitude, longitude});
-        console.log('Current location:', latitude, longitude);
+        console.log('Location fetched:', position.coords);
+        setLocation(position.coords);
       },
       error => {
-        console.log('Error getting location:', error);
+        console.log('Error fetching location:', error);
         Snackbar.show({
           text: 'Failed to fetch current location',
           backgroundColor: 'red',
@@ -50,144 +47,50 @@ const AddCustomer = ({route}) => {
       },
       {
         enableHighAccuracy: true,
-        distanceFilter: 10,
-        timeout: 30000,
+        timeout: 30000, // 30 seconds timeout for location fetching
         maximumAge: 10000,
       },
     );
+  };
 
-    return () => {
-      Geolocation.clearWatch(watchId);
-    };
+  useEffect(() => {
+    fetchLocation();
   }, []);
 
   useEffect(() => {
     const fetchRoutes = async () => {
+      console.log('Fetching routes for driver ID:', driverId);
       try {
         const response = await fetch(`http://${WIFI}/api/route/${driverId}`);
         const data = await response.json();
-        console.log('Fetched route:', data);
-
-        if (data && data.customersByRoute && data.customersByRoute[0].route) {
-          const route = data.customersByRoute[0].route;
-          const routes = [
-            {
-              id: route._id,
-              name: route.name,
-            },
-          ];
-          setAdminRoutes(routes);
-        } else {
-          console.log('No routes found for this driverId');
-          setAdminRoutes([]);
-        }
+        console.log('Routes fetched:', data);
+        const routes = data?.customersByRoute?.[0]?.route
+          ? [
+              {
+                id: data.customersByRoute[0].route._id,
+                name: data.customersByRoute[0].route.name,
+              },
+            ]
+          : [];
+        setAdminRoutes(routes);
       } catch (error) {
-        console.error('Error fetching route options:', error);
+        console.error('Error fetching routes:', error);
         Snackbar.show({
-          text: 'Failed to fetch route options.',
+          text: 'Failed to fetch route options',
           backgroundColor: 'red',
           duration: 2000,
         });
       }
     };
-
     fetchRoutes();
   }, [driverId]);
 
-  const handleCustomerNameChange = text => {
-    const namePattern = /^[A-Za-z\s]*$/; // Allow only alphabets and spaces
-    if (namePattern.test(text)) {
-      setCustomerName(text);
-    }
-  };
-
-  const handleMobileNoChange = text => {
-    const mobilePattern = /^[0-9]*$/; // Allow only numbers
-    if (mobilePattern.test(text)) {
-      setMobileNo(text);
-    }
-  };
-
-  const handleEmailChange = text => {
-    setEmail(text);
-  };
-
-  const handleSubmit = async () => {
-    // Validate inputs before proceeding
-    if (!validateFields()) {
-      return;
-    }
-
-    const payload = {
-      name: customerName,
-      address: address,
-      mobileNo: mobileNo,
-      email: email,
-      location: location ? `${location.latitude},${location.longitude}` : '',
-      route: selectedRouteId,
-    };
-
-    console.log('Payload:', payload);
-
-    setIsLoading(true); // Start loading
-
-    try {
-      const response = await fetch(
-        `http://${WIFI}/api/customers/to/${driverId}`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(payload),
-        },
-      );
-
-      const data = await response.json();
-      console.log('API Response:', data);
-
-      setIsLoading(false); // End loading
-
-      if (data.success) {
-        console.log('Customer Added ✅');
-        setSuccessAddedCustomer(true);
-        Snackbar.show({
-          text: 'Customer Added Successfully!',
-          backgroundColor: 'green',
-          duration: 2000,
-        });
-        setTimeout(() => {
-          setSuccessAddedCustomer(false);
-          setCustomerName('');
-          setMobileNo('');
-          setAddress('');
-          setEmail('');
-          setSelectedRouteId(null);
-          setLocation(null);
-        }, 3000);
-      } else {
-        console.log('Customer not added ❌');
-        setIsLoading(false); // End loading
-        Snackbar.show({
-          text: `Customer with ${email} already existed, try with a different Email Id.`,
-          backgroundColor: 'red',
-          duration: 3000,
-        });
-      }
-    } catch (err) {
-      console.log('Error adding customer from mobile:', err);
-      setIsLoading(false); // End loading
-      Snackbar.show({
-        text: 'Something went wrong, please try again.',
-        backgroundColor: 'red',
-        duration: 3000,
-      });
-    }
-  };
+  const handleChange = (field, value) =>
+    setFormData(prevState => ({...prevState, [field]: value}));
 
   const validateFields = () => {
-    const namePattern = /^[A-Za-z\s]+$/;
-    if (!namePattern.test(customerName)) {
+    const {customerName, mobileNo, email, selectedRouteId} = formData;
+    if (!/^[A-Za-z\s]+$/.test(customerName)) {
       Snackbar.show({
         text: 'Customer name can only contain alphabets and spaces.',
         backgroundColor: 'red',
@@ -195,9 +98,7 @@ const AddCustomer = ({route}) => {
       });
       return false;
     }
-
-    const mobilePattern = /^[0-9]{10}$/;
-    if (!mobilePattern.test(mobileNo)) {
+    if (!/^\d{10}$/.test(mobileNo)) {
       Snackbar.show({
         text: 'Mobile number must be 10 digits.',
         backgroundColor: 'red',
@@ -205,17 +106,14 @@ const AddCustomer = ({route}) => {
       });
       return false;
     }
-
-    const emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    if (!emailPattern.test(email)) {
+    if (!/^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email)) {
       Snackbar.show({
         text: 'Please enter a valid email address.',
         backgroundColor: 'red',
-        duration:3000,
+        duration: 3000,
       });
       return false;
     }
-
     if (!selectedRouteId) {
       Snackbar.show({
         text: 'Please select a route.',
@@ -224,8 +122,64 @@ const AddCustomer = ({route}) => {
       });
       return false;
     }
-
     return true;
+  };
+
+  const handleSubmit = async () => {
+    if (!validateFields()) return;
+    const {customerName, mobileNo, address, email, selectedRouteId} = formData;
+    const payload = {
+      name: customerName,
+      address,
+      mobileNo,
+      email,
+      location: location ? `${location.latitude},${location.longitude}` : '',
+      route: selectedRouteId,
+    };
+
+    console.log('Submitting customer data:', payload);
+    setIsLoading(true);
+    try {
+      const response = await fetch(
+        `http://${WIFI}/api/customers/to/${driverId}`,
+        {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(payload),
+        },
+      );
+      const data = await response.json();
+      setIsLoading(false);
+      console.log('Customer submission response:', data);
+      if (data.success) {
+        Snackbar.show({
+          text: 'Customer Added Successfully!',
+          backgroundColor: 'green',
+          duration: 2000,
+        });
+        setFormData({
+          customerName: '',
+          mobileNo: '',
+          address: '',
+          email: '',
+          selectedRouteId: null,
+        });
+      } else {
+        Snackbar.show({
+          text: 'Customer with this email already exists.',
+          backgroundColor: 'red',
+          duration: 3000,
+        });
+      }
+    } catch (err) {
+      setIsLoading(false);
+      console.error('Error submitting customer data:', err);
+      Snackbar.show({
+        text: 'Something went wrong. Please try again.',
+        backgroundColor: 'red',
+        duration: 3000,
+      });
+    }
   };
 
   return (
@@ -236,35 +190,33 @@ const AddCustomer = ({route}) => {
         <ScrollView contentContainerStyle={{flexGrow: 1}}>
           <View style={Style.container}>
             <Text style={Style.title}>CUSTOMER INFORMATION</Text>
-
             <TextInput
               style={Style.input}
               placeholder="Customer Name"
-              value={customerName}
-              onChangeText={handleCustomerNameChange}
+              value={formData.customerName}
+              onChangeText={text => handleChange('customerName', text)}
             />
             <TextInput
               style={Style.input}
               placeholder="Mobile No"
-              value={mobileNo}
-              onChangeText={handleMobileNoChange}
+              value={formData.mobileNo}
+              onChangeText={text => handleChange('mobileNo', text)}
               keyboardType="numeric"
               maxLength={10}
             />
             <TextInput
               style={Style.input}
               placeholder="Address"
-              value={address}
-              onChangeText={setAddress}
+              value={formData.address}
+              onChangeText={text => handleChange('address', text)}
             />
             <TextInput
               style={Style.input}
               placeholder="Email ID"
-              value={email}
-              onChangeText={handleEmailChange}
+              value={formData.email}
+              onChangeText={text => handleChange('email', text)}
               keyboardType="email-address"
             />
-
             {location ? (
               <View style={Style.locationContainer}>
                 <Text style={Style.locationText}>
@@ -278,27 +230,50 @@ const AddCustomer = ({route}) => {
               </Text>
             )}
 
+            {/* Google Maps */}
+            <View style={Style.mapContainer}>
+              {location && (
+                <MapView
+                  style={Style.map}
+                  region={{
+                    latitude: location.latitude,
+                    longitude: location.longitude,
+                    latitudeDelta: 0.0922,
+                    longitudeDelta: 0.0421,
+                  }}
+                  provider="google"
+                  apiKey={YOUR_GOOGLE_MAPS_API_KEY} // Use your Google Maps API key here
+                >
+                  <Marker
+                    coordinate={{
+                      latitude: location.latitude,
+                      longitude: location.longitude,
+                    }}
+                    title="Your Location"
+                    description="Current Location"
+                  />
+                </MapView>
+              )}
+            </View>
+
             <Text style={Style.dropdownLabel}>Select Route:</Text>
             <View style={Style.pickerContainer}>
               <Picker
-                selectedValue={selectedRouteId}
+                selectedValue={formData.selectedRouteId}
                 style={Style.picker}
-                onValueChange={itemValue => setSelectedRouteId(itemValue)}>
+                onValueChange={itemValue =>
+                  handleChange('selectedRouteId', itemValue)
+                }>
                 <Picker.Item label="Select a route" value={null} />
-                {Array.isArray(adminRoutes) && adminRoutes.length > 0 ? (
-                  adminRoutes.map(route => (
-                    <Picker.Item
-                      key={route.id}
-                      label={route.name}
-                      value={route.id}
-                    />
-                  ))
-                ) : (
-                  <Picker.Item label="No routes available" value={null} />
-                )}
+                {adminRoutes.map(route => (
+                  <Picker.Item
+                    key={route.id}
+                    label={route.name}
+                    value={route.id}
+                  />
+                ))}
               </Picker>
             </View>
-
             <View style={Style.footer}>
               <TouchableOpacity style={Style.button1} onPress={handleSubmit}>
                 {isLoading ? (
@@ -308,7 +283,6 @@ const AddCustomer = ({route}) => {
                 )}
               </TouchableOpacity>
             </View>
-
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
