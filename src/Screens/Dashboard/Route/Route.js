@@ -97,7 +97,7 @@ const Route = ({navigation, route}) => {
     const dropCords = routeData.marker
       .map(marker => {
         const customer = routeData.customerArr.find(
-          cust => cust._id === marker.id,
+          cust => cust && cust._id === marker.id, // Check if 'cust' is valid before accessing _id
         );
         return customer
           ? {

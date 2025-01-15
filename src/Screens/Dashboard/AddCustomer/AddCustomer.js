@@ -30,28 +30,29 @@ const AddCustomer = ({route}) => {
   const [adminRoutes, setAdminRoutes] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  const fetchLocation = () => {
-    console.log('Fetching location...');
-    Geolocation.getCurrentPosition(
-      position => {
-        console.log('Location fetched:', position.coords);
-        setLocation(position.coords);
-      },
-      error => {
-        console.log('Error fetching location:', error);
-        Snackbar.show({
-          text: 'Failed to fetch current location',
-          backgroundColor: 'red',
-          duration: 2000,
-        });
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 30000, // 30 seconds timeout for location fetching
-        maximumAge: 10000,
-      },
-    );
-  };
+ const fetchLocation = () => {
+   console.log('Fetching location...');
+   Geolocation.getCurrentPosition(
+     position => {
+       console.log('Location fetched:', position.coords);
+       setLocation(position.coords);
+     },
+     error => {
+       console.log('Error fetching location:', error);
+       Snackbar.show({
+         text: 'Failed to fetch current location',
+         backgroundColor: 'red',
+         duration: 2000,
+       });
+     },
+     {
+       enableHighAccuracy: false, // Reduced accuracy for faster fetching
+       timeout: 10000, // 10 seconds timeout
+       maximumAge: 5000, // 5 seconds maximum age to use cached location
+     },
+   );
+ };
+
 
   useEffect(() => {
     fetchLocation();
