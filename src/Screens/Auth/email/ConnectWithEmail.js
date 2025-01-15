@@ -136,7 +136,7 @@ const ConnectWithEmail = () => {
 
       if (response.ok) {
         console.log('Login Successful:', result);
-        navigation.navigate('TabNav', {driverId});
+        navigation.replace('TabNav', {driverId});
       } else {
         console.error('Error Response:', result);
         Snackbar.show({

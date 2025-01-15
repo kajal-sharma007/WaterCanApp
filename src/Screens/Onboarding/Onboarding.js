@@ -61,12 +61,12 @@ const Onboarding = () => {
           <CustomButton
             icon={Call}
             title="Started with Phone"
-            onPress={() => navigation.navigate('ConnectWithPhone')}
+            onPress={() => navigation.replace('ConnectWithPhone')}
           />
           <CustomButton
             icon={Email}
             title="Started with Email"
-            onPress={() => navigation.navigate('ConnectWithEmail')}
+            onPress={() => navigation.replace('ConnectWithEmail')}
           />
         </View>
       </ScrollView>

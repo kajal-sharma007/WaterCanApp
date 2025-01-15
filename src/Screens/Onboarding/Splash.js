@@ -11,7 +11,7 @@ const Splash = () => {
     setIsMounted(true);
     const timer = setTimeout(() => {
       if (isMounted) {
-        navigation.navigate('Onboarding');
+        navigation.replace('Onboarding');
       }
     }, 1000);
 
