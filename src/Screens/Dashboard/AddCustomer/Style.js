@@ -60,10 +60,10 @@ const Styles = StyleSheet.create({
     height: 60,
     width: '100%',
     borderWidth: 1,
-    borderColor: '#395bd5',
-    borderRadius: 20, // Border radius applied to the container
-    overflow: 'hidden', // This ensures the border radius works
-    backgroundColor: '#7cdcfe',
+    borderColor: '#e3f2fd',
+    borderRadius: 20,
+    overflow: 'hidden',
+    backgroundColor: '#e3f2fd',
     marginTop: 10,
   },
   footer: {
@@ -93,7 +93,7 @@ const Styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Semi-transparent background
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContent: {
     backgroundColor: 'white',
@@ -106,6 +106,25 @@ const Styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: '#395bd5',
+  },
+  locationContainer: {
+    backgroundColor: '#e3f2fd',
+    borderColor: '#395bd5', // Border color
+    borderWidth: 1, // Adding border width
+    borderRadius: 8,
+    padding: 15,
+    marginTop: 20,
+    marginBottom: 20,
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flex: 1,
+  },
+  locationText: {
+    fontSize: 12,
+    color: '#000000',
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
 });
 

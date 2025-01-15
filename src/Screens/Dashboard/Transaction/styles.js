@@ -27,11 +27,12 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: '#b5e5fa',
+    color: '#000000',
   },
   customerDetails: {
     fontSize: 16,
     marginBottom: 10,
-    color: '#0c555f',
+    color: '#000000',
   },
   label: {
     fontSize: 16,
@@ -102,19 +103,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     width: '45%', // Ensures each button takes up 45% of the width
-    height: 50,   // Provides enough height for the button for better accessibility
-    backgroundColor: '#395bd5',  // Add a background color for the button
-    elevation: 3,  // Shadow for Android
-    shadowColor: '#000',  // Shadow color for iOS
-    shadowOffset: { width: 0, height: 2 },  // Shadow offset for iOS
-    shadowOpacity: 0.2,   // Shadow opacity for iOS
-    shadowRadius: 5,      // Shadow radius for iOS
+    height: 50, // Provides enough height for the button for better accessibility
+    backgroundColor: '#395bd5', // Add a background color for the button
+    elevation: 3, // Shadow for Android
+    shadowColor: '#000', // Shadow color for iOS
+    shadowOffset: {width: 0, height: 2}, // Shadow offset for iOS
+    shadowOpacity: 0.2, // Shadow opacity for iOS
+    shadowRadius: 5, // Shadow radius for iOS
   },
   buttonText: {
-    fontSize: 16,  // Larger text size for better readability
+    fontSize: 16, // Larger text size for better readability
     color: '#fff', // White text color for contrast
-    fontWeight: 'bold',  // Bold text for better visibility
-    paddingVertical: 5,  // Vertical padding for spacing
+    fontWeight: 'bold', // Bold text for better visibility
+    paddingVertical: 5, // Vertical padding for spacing
   },
 
   // Add Combo Button Styling
@@ -130,7 +131,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   addComboButtonText: {
-    fontSize: 16,  // Same size as other buttons for consistency
+    fontSize: 16, // Same size as other buttons for consistency
     color: '#fff', // White text color
     fontWeight: 'bold', // Bold text for better readability
   },
@@ -161,15 +162,15 @@ const styles = StyleSheet.create({
   },
 
   tileContainer: {
-    backgroundColor: '#b5e5fa',  // Light grey background for the tile
+    backgroundColor: '#b5e5fa', // Light grey background for the tile
     borderRadius: 10,
     padding: 15,
     marginVertical: 10,
-    elevation: 3,  // Shadow for Android
-    shadowColor: '#000',  // Shadow color for iOS
-    shadowOffset: { width: 0, height: 2 },  // Shadow offset for iOS
-    shadowOpacity: 0.1,   // Shadow opacity for iOS
-    shadowRadius: 5,      // Shadow radius for iOS
+    elevation: 3, // Shadow for Android
+    shadowColor: '#000', // Shadow color for iOS
+    shadowOffset: {width: 0, height: 2}, // Shadow offset for iOS
+    shadowOpacity: 0.1, // Shadow opacity for iOS
+    shadowRadius: 5, // Shadow radius for iOS
   },
   tileText: {
     fontSize: 16,

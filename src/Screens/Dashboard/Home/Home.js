@@ -1,10 +1,11 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useMemo} from 'react';
 import {
   View,
   Text,
   FlatList,
   TouchableOpacity,
   Modal,
+  Animated,
   StyleSheet,
   ActivityIndicator,
 } from 'react-native';
@@ -17,10 +18,14 @@ const Home = ({navigation, route}) => {
   const [error, setError] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedRoute, setSelectedRoute] = useState(null);
+
+  // Use useMemo to memoize scale and opacity values
+  const scale = useMemo(() => new Animated.Value(0), []);
+  const opacity = useMemo(() => new Animated.Value(0), []);
+
   const {driverId} = route.params;
 
   useEffect(() => {
-    // Fetch the routes for the given driverId
     const fetchRoutes = async () => {
       try {
         setLoading(true);
@@ -28,23 +33,21 @@ const Home = ({navigation, route}) => {
 
         const response = await fetch(`http://${WIFI}/api/route/${driverId}`);
         const data = await response.json();
-       
 
         if (response.ok) {
-          // Process the data from response
           const routesData = data.customersByRoute.map(item => ({
-            routeName: item.route.name, // Route name
-            customerName: item.customerArr.length > 0 ? item.customerArr : [], // First customer name (fallback if empty)
+            routeName: item.route.name,
+            customerName: item.customerArr.length > 0 ? item.customerArr : [],
             address:
               item.customerArr.length > 0
                 ? item.customerArr[0]?.address
-                : 'No address available', // Customer address (fallback if empty)
-            routeId: item.route._id, // Route id for unique identification
+                : 'No address available',
+            routeId: item.route._id,
             customerId:
-              item.customerArr.length > 0 ? item.customerArr[0]?._id : null, // Customer id (use null if no customer)
+              item.customerArr.length > 0 ? item.customerArr[0]?._id : null,
           }));
 
-          setRoutes(routesData); // Set the formatted data for FlatList
+          setRoutes(routesData);
         } else {
           throw new Error('Failed to load routes');
         }
@@ -63,9 +66,38 @@ const Home = ({navigation, route}) => {
     setModalVisible(true);
   };
 
-  const renderRouteItem = ({item}) => {
-    
+  // Modal animation logic
+  useEffect(() => {
+    if (modalVisible) {
+      // Animate modal appearance (scale + opacity)
+      Animated.timing(scale, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
 
+      Animated.timing(opacity, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      // Reset animation on close
+      Animated.timing(scale, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+
+      Animated.timing(opacity, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [modalVisible, opacity, scale]);
+
+  const renderRouteItem = ({item}) => {
     return (
       <TouchableOpacity
         style={Styles.routeTile}
@@ -82,12 +114,11 @@ const Home = ({navigation, route}) => {
       {loading && <ActivityIndicator size="large" color="#20B2AA" />}
       {error && <Text style={Styles.errorText}>{error}</Text>}
 
-      {/* Display routes when data is loaded and no errors */}
       {!loading && !error && (
         <FlatList
           data={routes}
           renderItem={renderRouteItem}
-          keyExtractor={item => item.routeId.toString()} // Use routeId for unique key
+          keyExtractor={item => item.routeId.toString()}
           numColumns={2}
           contentContainerStyle={Styles.routeList}
         />
@@ -96,11 +127,18 @@ const Home = ({navigation, route}) => {
       {/* Modal for displaying route details */}
       <Modal
         transparent={true}
-        animationType="slide"
+        animationType="none" // Disable the default animation
         visible={modalVisible}
         onRequestClose={() => setModalVisible(false)}>
         <View style={Styles.modalContainer}>
-          <View style={Styles.modalContent}>
+          <Animated.View
+            style={[
+              Styles.modalContent,
+              {
+                transform: [{scale: scale}],
+                opacity: opacity,
+              },
+            ]}>
             {selectedRoute && (
               <>
                 <Text style={Styles.modalTitle}>Route Details</Text>
@@ -110,7 +148,6 @@ const Home = ({navigation, route}) => {
                     ? `${selectedRoute.customerName.length} customers`
                     : 'No customers'}
                 </Text>
-                {/* <Text>Address: {selectedRoute.address}</Text> */}
                 <TouchableOpacity
                   style={Styles.closeButton}
                   onPress={() => setModalVisible(false)}>
@@ -118,7 +155,7 @@ const Home = ({navigation, route}) => {
                 </TouchableOpacity>
               </>
             )}
-          </View>
+          </Animated.View>
         </View>
       </Modal>
     </View>
