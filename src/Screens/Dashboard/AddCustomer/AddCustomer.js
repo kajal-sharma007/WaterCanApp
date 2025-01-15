@@ -14,7 +14,7 @@ import {Picker} from '@react-native-picker/picker';
 import Snackbar from 'react-native-snackbar';
 import Geolocation from '@react-native-community/geolocation';
 import Style from './Style';
-import {WIFI, YOUR_GOOGLE_MAPS_API_KEY} from '../../constants/constants'; // Import your API key
+import {WIFI} from '../../constants/constants'; // Import your API key
 import MapView, {Marker} from 'react-native-maps'; // Google Maps Component
 
 const AddCustomer = ({route}) => {
@@ -229,33 +229,6 @@ const AddCustomer = ({route}) => {
                 Fetching current location...
               </Text>
             )}
-
-            {/* Google Maps */}
-            <View style={Style.mapContainer}>
-              {location && (
-                <MapView
-                  style={Style.map}
-                  region={{
-                    latitude: location.latitude,
-                    longitude: location.longitude,
-                    latitudeDelta: 0.0922,
-                    longitudeDelta: 0.0421,
-                  }}
-                  provider="google"
-                  apiKey={YOUR_GOOGLE_MAPS_API_KEY} // Use your Google Maps API key here
-                >
-                  <Marker
-                    coordinate={{
-                      latitude: location.latitude,
-                      longitude: location.longitude,
-                    }}
-                    title="Your Location"
-                    description="Current Location"
-                  />
-                </MapView>
-              )}
-            </View>
-
             <Text style={Style.dropdownLabel}>Select Route:</Text>
             <View style={Style.pickerContainer}>
               <Picker
