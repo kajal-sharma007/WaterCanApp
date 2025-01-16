@@ -8,6 +8,8 @@ import {
   KeyboardAvoidingView,
   SafeAreaView,
   Platform,
+  Modal,
+  StyleSheet,
 } from 'react-native';
 import Snackbar from 'react-native-snackbar';
 import Geolocation from '@react-native-community/geolocation';
@@ -28,9 +30,19 @@ const AddCustomer = ({route}) => {
   const [location, setLocation] = useState(null);
   const [adminRoutes, setAdminRoutes] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [open, setOpen] = useState(false); // Dropdown state
-  const [value, setValue] = useState(null); // Selected value from dropdown
-  const [items, setItems] = useState([]); // List of items for dropdown
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState(null);
+  const [items, setItems] = useState([]);
+  const [errors, setErrors] = useState({
+    customerName: '',
+    mobileNo: '',
+    email: '',
+    selectedRouteId: '',
+  });
+
+  // State for modal visibility and message
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalMessage, setModalMessage] = useState('');
 
   const fetchLocation = () => {
     console.log('Fetching location...');
@@ -59,40 +71,35 @@ const AddCustomer = ({route}) => {
     fetchLocation();
   }, []);
 
-  useEffect(() => {
-    const fetchRoutes = async () => {
-      console.log('Fetching routes for driver ID:', driverId);
-      try {
-        const response = await fetch(`http://${WIFI}/api/route/${driverId}`);
-        const data = await response.json();
-        console.log('Routes fetched:', data);
-        const routes = data?.customersByRoute?.[0]?.route
-          ? [
-              {
-                id: data.customersByRoute[0].route._id,
-                name: data.customersByRoute[0].route.name,
-              },
-            ]
-          : [];
-        setAdminRoutes(routes);
-        // Prepare dropdown items
-        setItems(
-          routes.map(route => ({
-            label: route.name,
-            value: route.id,
-          })),
-        );
-      } catch (error) {
-        console.error('Error fetching routes:', error);
-        Snackbar.show({
-          text: 'Failed to fetch route options',
-          backgroundColor: 'red',
-          duration: 2000,
-        });
-      }
-    };
-    fetchRoutes();
-  }, [driverId]);
+   useEffect(() => {
+     const fetchRoutes = async () => {
+       try {
+         const response = await fetch(`http://${WIFI}/api/route/${driverId}`);
+         const data = await response.json();
+         const routes = data?.customersByRoute?.flatMap(item =>
+           item.route
+             ? {
+                 id: item.route._id,
+                 name: item.route.name,
+               }
+             : [],
+         );
+
+         setAdminRoutes(routes);
+
+         setItems(
+           routes.map(route => ({
+             label: route.name,
+             value: route.id,
+           })),
+         );
+       } catch (error) {
+         console.error('Error fetching routes:', error);
+       }
+     };
+
+     fetchRoutes();
+   }, [driverId]);
 
   const handleChange = (field, value) =>
     setFormData(prevState => ({...prevState, [field]: value}));
@@ -115,13 +122,9 @@ const AddCustomer = ({route}) => {
       });
       return false;
     }
-    if (!/^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email)) {
-      Snackbar.show({
-        text: 'Please enter a valid email address.',
-        backgroundColor: 'red',
-        duration: 3000,
-      });
-      return false;
+    if (!/^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[A-Za-z]{2,}$/.test(email)) {
+      validationErrors.email = 'Please enter a valid email address.';
+      isValid = false;
     }
     if (!selectedRouteId) {
       Snackbar.show({
@@ -173,6 +176,10 @@ const AddCustomer = ({route}) => {
           email: '',
           selectedRouteId: null,
         });
+
+        // Show success message in modal
+        setModalMessage('Customer added successfully!');
+        setModalVisible(true);
       } else {
         Snackbar.show({
           text: 'Customer with this email already exists.',
@@ -291,8 +298,57 @@ const AddCustomer = ({route}) => {
           )}
         />
       </KeyboardAvoidingView>
+
+      {/* Modal for success message */}
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalMessage}>{modalMessage}</Text>
+            <TouchableOpacity
+              style={styles.modalButton}
+              onPress={() => setModalVisible(false)}>
+              <Text style={styles.modalButtonText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
+
+const styles = StyleSheet.create({
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    padding: 20,
+    borderRadius: 10,
+    width: 300,
+    alignItems: 'center',
+  },
+  modalMessage: {
+    fontSize: 18,
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  modalButton: {
+    backgroundColor: '#395bd5',
+    paddingVertical: 10,
+    paddingHorizontal: 30,
+    borderRadius: 5,
+  },
+  modalButtonText: {
+    color: '#fff',
+    fontSize: 16,
+  },
+});
 
 export default AddCustomer;
