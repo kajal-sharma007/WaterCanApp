@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import Styles from './Styles';
 import {WIFI} from '../../constants/constants';
+import ChartComponet from './ChartComponet';
 
 const Home = ({navigation, route}) => {
   const [routes, setRoutes] = useState([]);
@@ -108,57 +109,62 @@ const Home = ({navigation, route}) => {
   };
 
   return (
-    <View style={Styles.container}>
-      <Text style={Styles.title}>Routes for Delivery</Text>
+    <>
+      <View style={Styles.container}>
+        <Text style={Styles.title}>Routes for Delivery</Text>
 
-      {loading && <ActivityIndicator size="large" color="#20B2AA" />}
-      {error && <Text style={Styles.errorText}>{error}</Text>}
+        {loading && <ActivityIndicator size="large" color="#20B2AA" />}
+        {error && <Text style={Styles.errorText}>{error}</Text>}
 
-      {!loading && !error && (
-        <FlatList
-          data={routes}
-          renderItem={renderRouteItem}
-          keyExtractor={item => item.routeId.toString()}
-          numColumns={2}
-          contentContainerStyle={Styles.routeList}
-        />
-      )}
+        {!loading && !error && (
+          <FlatList
+            data={routes}
+            renderItem={renderRouteItem}
+            keyExtractor={item => item.routeId.toString()}
+            numColumns={2}
+            contentContainerStyle={Styles.routeList}
+          />
+        )}
 
-      {/* Modal for displaying route details */}
-      <Modal
-        transparent={true}
-        animationType="none" // Disable the default animation
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}>
-        <View style={Styles.modalContainer}>
-          <Animated.View
-            style={[
-              Styles.modalContent,
-              {
-                transform: [{scale: scale}],
-                opacity: opacity,
-              },
-            ]}>
-            {selectedRoute && (
-              <>
-                <Text style={Styles.modalTitle}>Route Details</Text>
-                <Text>Route: {selectedRoute.routeName}</Text>
-                <Text>
-                  {selectedRoute.customerName.length > 0
-                    ? `${selectedRoute.customerName.length} customers`
-                    : 'No customers'}
-                </Text>
-                <TouchableOpacity
-                  style={Styles.closeButton}
-                  onPress={() => setModalVisible(false)}>
-                  <Text style={Styles.closeButtonText}>Close</Text>
-                </TouchableOpacity>
-              </>
-            )}
-          </Animated.View>
-        </View>
-      </Modal>
-    </View>
+        {/* Modal for displaying route details */}
+        <Modal
+          transparent={true}
+          animationType="none" // Disable the default animation
+          visible={modalVisible}
+          onRequestClose={() => setModalVisible(false)}>
+          <View style={Styles.modalContainer}>
+            <Animated.View
+              style={[
+                Styles.modalContent,
+                {
+                  transform: [{scale: scale}],
+                  opacity: opacity,
+                },
+              ]}>
+              {selectedRoute && (
+                <>
+                  <Text style={Styles.modalTitle}>Route Details</Text>
+                  <Text>Route: {selectedRoute.routeName}</Text>
+                  <Text>
+                    {selectedRoute.customerName.length > 0
+                      ? `${selectedRoute.customerName.length} customers`
+                      : 'No customers'}
+                  </Text>
+                  <TouchableOpacity
+                    style={Styles.closeButton}
+                    onPress={() => setModalVisible(false)}>
+                    <Text style={Styles.closeButtonText}>Close</Text>
+                  </TouchableOpacity>
+                </>
+              )}
+            </Animated.View>
+          </View>
+        </Modal>
+      </View>
+      <View style={Styles.tableContainer}>
+        <ChartComponet />
+      </View>
+    </>
   );
 };
 

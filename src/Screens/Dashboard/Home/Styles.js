@@ -8,6 +8,11 @@ const Styles = StyleSheet.create({
     padding: 16,
     backgroundColor: '#f9f9f9',
   },
+  tableContainer: {
+    flex: 2,
+    padding: 16,
+    backgroundColor: '#f9f9f9',
+  },
   title: {
     fontSize: 26,
     fontWeight: 'bold',
