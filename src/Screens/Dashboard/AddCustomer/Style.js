@@ -25,8 +25,9 @@ const Styles = StyleSheet.create({
     color: 'white',
   },
   errorText: {
-    padding: 10,
-    color: 'white',
+    color: 'red',
+    fontSize: 12,
+    marginTop: 0,
   },
   title: {
     fontSize: 23,
