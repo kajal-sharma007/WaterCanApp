@@ -8,6 +8,8 @@ import {
   KeyboardAvoidingView,
   SafeAreaView,
   Platform,
+  Modal,
+  StyleSheet,
 } from 'react-native';
 import Geolocation from '@react-native-community/geolocation';
 import DropDownPicker from 'react-native-dropdown-picker';
@@ -36,6 +38,10 @@ const AddCustomer = ({route}) => {
     email: '',
     selectedRouteId: '',
   });
+
+  // State for modal visibility and message
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalMessage, setModalMessage] = useState('');
 
   const fetchLocation = () => {
     Geolocation.getCurrentPosition(
@@ -158,7 +164,7 @@ const AddCustomer = ({route}) => {
       validationErrors.mobileNo = 'Mobile number must be 10 digits.';
       isValid = false;
     }
-    if (!/^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email)) {
+    if (!/^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[A-Za-z]{2,}$/.test(email)) {
       validationErrors.email = 'Please enter a valid email address.';
       isValid = false;
     }
@@ -203,6 +209,10 @@ const AddCustomer = ({route}) => {
           email: '',
           selectedRouteId: null,
         });
+
+        // Show success message in modal
+        setModalMessage('Customer added successfully!');
+        setModalVisible(true);
       } else {
         console.error('Customer with this email already exists.');
       }
@@ -322,8 +332,57 @@ const AddCustomer = ({route}) => {
           )}
         />
       </KeyboardAvoidingView>
+
+      {/* Modal for success message */}
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalMessage}>{modalMessage}</Text>
+            <TouchableOpacity
+              style={styles.modalButton}
+              onPress={() => setModalVisible(false)}>
+              <Text style={styles.modalButtonText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
+
+const styles = StyleSheet.create({
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    padding: 20,
+    borderRadius: 10,
+    width: 300,
+    alignItems: 'center',
+  },
+  modalMessage: {
+    fontSize: 18,
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  modalButton: {
+    backgroundColor: '#395bd5',
+    paddingVertical: 10,
+    paddingHorizontal: 30,
+    borderRadius: 5,
+  },
+  modalButtonText: {
+    color: '#fff',
+    fontSize: 16,
+  },
+});
 
 export default AddCustomer;
