@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -13,21 +13,23 @@ import {
 } from 'react-native';
 import Geolocation from '@react-native-community/geolocation';
 import DropDownPicker from 'react-native-dropdown-picker';
+import { WIFI } from '../../constants/constants';
+import { FlatList } from 'react-native';
 import Style from './Style';
-import {WIFI} from '../../constants/constants';
-import {FlatList} from 'react-native';
 
-const AddCustomer = ({route}) => {
-  const {driverId} = route.params;
+const AddCustomer = ({ route }) => {
+  const { driverId } = route.params;
   const [formData, setFormData] = useState({
     customerName: '',
     mobileNo: '',
     address: '',
     email: '',
     selectedRouteId: null,
+    selectedAdminId: null, // Added admin ID to the form
   });
   const [location, setLocation] = useState(null);
   const [adminRoutes, setAdminRoutes] = useState([]);
+  const [adminList, setAdminList] = useState([]); // Added state for admin list
   const [isLoading, setIsLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState(null);
@@ -37,6 +39,7 @@ const AddCustomer = ({route}) => {
     mobileNo: '',
     email: '',
     selectedRouteId: '',
+    selectedAdminId: '', // Added validation for admin dropdown
   });
 
   // State for modal visibility and message
@@ -90,34 +93,66 @@ const AddCustomer = ({route}) => {
       }
     };
 
+    // Fetching all admins assigned to the driverId
+    const fetchAdminList = async () => {
+      try {
+        const response = await fetch(`http://${WIFI}/api/get-all-admin-assigned/to/${driverId}`);
+        const data = await response.json();
+    
+        console.log('Fetched Admin Data:', data.users[0]._id);
+    
+        if (data && data.users && Array.isArray(data.users)) {
+          setAdminList(
+            data.users.map(admin => ({
+              label: admin.name,
+              value: admin._id,  // Using _id as the value for the dropdown
+            }))
+          );
+    
+          // Set the first admin as the default selected admin
+          setFormData(prevState => ({
+            ...prevState,
+            selectedAdminId: data.users[0]._id, // Automatically select the first admin
+          }));
+        } else {
+          console.error('Admin list is not available in the expected format');
+        }
+      } catch (error) {
+        console.error('Error fetching admin list:', error);
+      }
+    };
+    
+    
+
     fetchRoutes();
+    fetchAdminList();
   }, [driverId]);
 
   const handleChange = (field, value) => {
     if (field === 'email') {
       const validEmail = value
-        .replace(/[^A-Za-z0-9@._-]/g, '')
+        .replace(/[^A-Za-z0-9@._-]/g, ' ')
         .replace(/@.*@/, '@');
 
       const validEmailWithPeriod = validEmail.replace(/^\.|\.{2,}/g, '');
-      setFormData(prevState => ({...prevState, [field]: validEmailWithPeriod}));
+      setFormData(prevState => ({ ...prevState, [field]: validEmailWithPeriod }));
 
       validateField(field, validEmailWithPeriod);
     } else if (field === 'mobileNo') {
       const validValue = value.replace(/[^0-9]/g, '').slice(0, 10);
-      setFormData(prevState => ({...prevState, [field]: validValue}));
+      setFormData(prevState => ({ ...prevState, [field]: validValue }));
     } else if (field === 'customerName') {
       const validValue = value.replace(/[^A-Za-z\s]/g, '');
-      setFormData(prevState => ({...prevState, [field]: validValue}));
+      setFormData(prevState => ({ ...prevState, [field]: validValue }));
     } else {
-      setFormData(prevState => ({...prevState, [field]: value}));
+      setFormData(prevState => ({ ...prevState, [field]: value }));
     }
 
     validateField(field, value);
   };
 
   const validateField = (field, value) => {
-    let validationErrors = {...errors};
+    let validationErrors = { ...errors };
     switch (field) {
       case 'customerName':
         validationErrors.customerName =
@@ -133,9 +168,8 @@ const AddCustomer = ({route}) => {
         break;
       case 'email':
         validationErrors.email =
-          /^(?![_.])[A-Za-z0-9._-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(
-            value,
-          ) || value === ''
+          /^(?![_.])[A-Za-z0-9._-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(value) ||
+          value === ''
             ? ''
             : 'Please enter a valid email address .';
         break;
@@ -144,6 +178,9 @@ const AddCustomer = ({route}) => {
           ? ''
           : 'Please select a route.';
         break;
+      case 'selectedAdminId': // Added validation for admin selection
+        validationErrors.selectedAdminId = value ? '' : 'Please select an admin.';
+        break;
       default:
         break;
     }
@@ -151,7 +188,7 @@ const AddCustomer = ({route}) => {
   };
 
   const validateFields = () => {
-    const {customerName, mobileNo, email, selectedRouteId} = formData;
+    const { customerName, mobileNo, email, selectedRouteId, selectedAdminId } = formData;
     let validationErrors = {};
     let isValid = true;
 
@@ -172,57 +209,67 @@ const AddCustomer = ({route}) => {
       validationErrors.selectedRouteId = 'Please select a route.';
       isValid = false;
     }
+    if (!selectedAdminId) {
+      validationErrors.selectedAdminId = 'Please select an admin.';
+      isValid = false;
+    }
 
     setErrors(validationErrors);
     return isValid;
   };
 
   const handleSubmit = async () => {
-    if (!validateFields()) return;
-    const {customerName, mobileNo, address, email, selectedRouteId} = formData;
-    const payload = {
-      name: customerName,
-      address,
-      mobileNo,
-      email,
-      location: location ? `${location.latitude},${location.longitude}` : '',
-      route: selectedRouteId,
-    };
+  if (!validateFields()) return;
 
-    setIsLoading(true);
-    try {
-      const response = await fetch(
-        `http://${WIFI}/api/customers/to/${driverId}`,
-        {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify(payload),
-        },
-      );
-      const data = await response.json();
-      setIsLoading(false);
-      if (data.success) {
-        setFormData({
-          customerName: '',
-          mobileNo: '',
-          address: '',
-          email: '',
-          selectedRouteId: null,
-        });
-
-        // Show success message in modal
-        setModalMessage('Customer added successfully!');
-        setModalVisible(true);
-      } else {
-        console.error('Customer with this email already exists.');
-      }
-    } catch (err) {
-      setIsLoading(false);
-      console.error('Error submitting customer data:', err);
-    }
+  const { customerName, mobileNo, address, email, selectedRouteId, selectedAdminId } = formData;
+  const payload = {
+    name: customerName,
+    address,
+    mobileNo,
+    email,
+    location: location ? `${location.latitude},${location.longitude}` : '',
+    route: selectedRouteId,
+    admin: selectedAdminId, // Added admin to payload
   };
 
-  const renderItem = ({item}) => {
+  setIsLoading(true);
+  try {
+    const response = await fetch(`http://${WIFI}/api/customers/to/${driverId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    
+    const data = await response.json();
+    
+    console.log('Response data:', data); // Log the response data to inspect
+    
+    setIsLoading(false);
+    
+    if (data.success) {
+      setFormData({
+        customerName: '',
+        mobileNo: '',
+        address: '',
+        email: '',
+        selectedRouteId: null,
+        selectedAdminId: null, // Reset admin field
+      });
+
+      setModalMessage('Customer added successfully!');
+      setModalVisible(true);
+    } else {
+      console.error('Customer with this email already exists.');
+    }
+  } catch (err) {
+    setIsLoading(false);
+    console.error('Error submitting customer data:', err);
+  }
+};
+
+  
+
+  const renderItem = ({ item }) => {
     if (item.type === 'input') {
       return (
         <View>
@@ -234,9 +281,7 @@ const AddCustomer = ({route}) => {
             keyboardType={item.keyboardType}
             maxLength={item.maxLength}
           />
-          {errors[item.field] && (
-            <Text style={Style.errorText}>{errors[item.field]}</Text>
-          )}
+          {errors[item.field] && <Text style={Style.errorText}>{errors[item.field]}</Text>}
         </View>
       );
     }
@@ -269,6 +314,33 @@ const AddCustomer = ({route}) => {
         </View>
       );
     }
+    // if (item.type === 'adminDropdown') {
+    //   return (
+    //     <View>
+    //       <DropDownPicker
+    //         open={openAdmin}
+    //         value={valueAdmin}
+    //         items={itemsAdmin}
+    //         setOpen={setOpenAdmin}
+    //         setValue={setValueAdmin}
+    //         setItems={setItemsAdmin}
+    //         containerStyle={{ height: 50, width: '100%', marginTop: 10, marginBottom: 15 }}
+    //         style={{
+    //           borderColor: '#395bd5',
+    //           borderWidth: 1,
+    //           borderRadius: 5,
+    //           backgroundColor: '#e3f2fd',
+    //           zIndex: 1000, // Ensure dropdown is on top for Admin
+    //         }}
+    //         dropDownStyle={{ backgroundColor: '#7cdcfe' }}
+    //         placeholder="Select an admin"
+    //         onChangeValue={itemValue => handleChange('selectedAdminId', itemValue)}
+    //         dropDownDirection="BOTTOM"
+    //       />
+    //       {errors.selectedAdminId && <Text style={Style.errorText}>{errors.selectedAdminId}</Text>}
+    //     </View>
+    //   );
+    // }
     if (item.type === 'location') {
       return location ? (
         <View style={Style.locationContainer}>
@@ -287,7 +359,7 @@ const AddCustomer = ({route}) => {
   };
 
   const formItems = [
-    {type: 'input', field: 'customerName', placeholder: 'Customer Name'},
+    { type: 'input', field: 'customerName', placeholder: 'Customer Name' },
     {
       type: 'input',
       field: 'mobileNo',
@@ -295,30 +367,27 @@ const AddCustomer = ({route}) => {
       keyboardType: 'numeric',
       maxLength: 10,
     },
-    {type: 'input', field: 'address', placeholder: 'Address'},
+    { type: 'input', field: 'address', placeholder: 'Address' },
     {
       type: 'input',
       field: 'email',
       placeholder: 'Email ID',
       keyboardType: 'email-address',
     },
-    {type: 'location'},
-    {type: 'dropdown'},
+    { type: 'location' },
+    { type: 'dropdown' },
+    { type: 'adminDropdown' }, // Admin dropdown added here
   ];
 
   return (
-    <SafeAreaView style={{flex: 1}}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={{flex: 1}}>
+    <SafeAreaView style={{ flex: 1 }}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
         <FlatList
-          contentContainerStyle={{flexGrow: 1, padding: 20}}
+          contentContainerStyle={{ flexGrow: 1, padding: 20 }}
           data={formItems}
           renderItem={renderItem}
           keyExtractor={(item, index) => index.toString()}
-          ListHeaderComponent={() => (
-            <Text style={Style.title}>CUSTOMER INFORMATION</Text>
-          )}
+          ListHeaderComponent={() => <Text style={Style.title}>CUSTOMER INFORMATION</Text>}
           ListFooterComponent={() => (
             <View style={Style.footer}>
               <TouchableOpacity style={Style.button1} onPress={handleSubmit}>
@@ -338,13 +407,15 @@ const AddCustomer = ({route}) => {
         animationType="fade"
         transparent={true}
         visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}>
+        onRequestClose={() => setModalVisible(false)}
+      >
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <Text style={styles.modalMessage}>{modalMessage}</Text>
             <TouchableOpacity
               style={styles.modalButton}
-              onPress={() => setModalVisible(false)}>
+              onPress={() => setModalVisible(false)}
+            >
               <Text style={styles.modalButtonText}>Close</Text>
             </TouchableOpacity>
           </View>
