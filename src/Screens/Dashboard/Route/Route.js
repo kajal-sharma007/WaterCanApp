@@ -16,7 +16,6 @@ import GetLocation from 'react-native-get-location';
 import {WIFI} from '../../constants/constants';
 import RouteStyles from './Styles';
 import RBSheet from 'react-native-raw-bottom-sheet';
-import {log, warn, error} from './logger';
 
 const Route = ({navigation, route}) => {
   const [state, setState] = useState({
@@ -34,6 +33,8 @@ const Route = ({navigation, route}) => {
     error: null,
     dropdownVisible: false,
     selectedDropIndex: null,
+    completedMarkers: [],
+    completedMarkersTime: {},
   });
 
   const mapRef = useRef(null);
@@ -61,7 +62,6 @@ const Route = ({navigation, route}) => {
           alert('No route data found. Please try again later.');
         }
       } catch (error) {
-        warn('Error fetching routes:', error.message);
         setState(prevState => ({
           ...prevState,
           error: error.message,
@@ -90,14 +90,14 @@ const Route = ({navigation, route}) => {
           },
         }));
       })
-      .catch(err => warn('Error getting location:', err));
+      .catch(err => console.warn('Error getting location:', err));
   }, []);
 
   const handleRouteSelect = routeData => {
     const dropCords = routeData.marker
       .map(marker => {
         const customer = routeData.customerArr.find(
-          cust => cust && cust._id === marker.id, // Check if 'cust' is valid before accessing _id
+          cust => cust && cust._id === marker.id,
         );
         return customer
           ? {
@@ -129,6 +129,19 @@ const Route = ({navigation, route}) => {
     }));
 
     refRBSheet.current.open();
+
+    setTimeout(() => {
+      const timestamp = Date.now();
+
+      setState(prevState => ({
+        ...prevState,
+        completedMarkers: [...(prevState.completedMarkers || []), index],
+        completedMarkersTime: {
+          ...prevState.completedMarkersTime,
+          [index]: timestamp,
+        },
+      }));
+    }, 10000);
   };
 
   const zoomToFitRoute = coordinates => {
@@ -148,6 +161,23 @@ const Route = ({navigation, route}) => {
       selectedDropDetails: null,
       selectedDropIndex: null,
     }));
+  };
+
+  const resetMarker = () => {
+    setState(prevState => {
+      const updatedCompletedMarkers = prevState.completedMarkers.filter(
+        index => state.selectedDropIndex !== index,
+      );
+
+      return {
+        ...prevState,
+        completedMarkers: updatedCompletedMarkers,
+        completedMarkersTime: {
+          ...prevState.completedMarkersTime,
+          [state.selectedDropIndex]: null,
+        },
+      };
+    });
   };
 
   return (
@@ -194,12 +224,17 @@ const Route = ({navigation, route}) => {
             title="Pickup"
             image={imagePath.icBike}
           />
+
           {state.selectedDropCords.map((drop, index) => (
             <Marker
               key={index}
               coordinate={drop}
               title={drop.details?.name}
-              image={imagePath.locationmarker}
+              image={
+                state.completedMarkers && state.completedMarkers.includes(index)
+                  ? imagePath.locationDoneMarker
+                  : imagePath.locationmarker
+              }
               onPress={() => handleMarkerPress(index)}
             />
           ))}
@@ -224,7 +259,7 @@ const Route = ({navigation, route}) => {
 
       <RBSheet
         ref={refRBSheet}
-        height={250}
+        height={300}
         openDuration={250}
         closeOnDragDown={true}
         customStyles={{
@@ -256,21 +291,30 @@ const Route = ({navigation, route}) => {
           <Text style={styles.modalText}>
             Email: {state.selectedDropDetails?.details.email}
           </Text>
-
           <Text style={styles.modalText}>
             Customer ID: {state.selectedDropDetails?.details?.customer?._id}
           </Text>
 
-          <Button
-            title="Edit Transaction"
+          <TouchableOpacity
+            style={[styles.button, styles.primaryButton]}
             onPress={() => {
               refRBSheet.current.close();
               navigation.navigate('EditTransactionScreen', {
                 customerDetails: state.selectedDropDetails?.details,
                 driverId: driverId,
               });
-            }}
-          />
+            }}>
+            <Text style={styles.buttonText}>Edit Transaction</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.button, styles.secondaryButton]}
+            onPress={() => {
+              resetMarker();
+              refRBSheet.current.close();
+            }}>
+            <Text style={styles.buttonText}>Product Not Delivered</Text>
+          </TouchableOpacity>
         </View>
       </RBSheet>
     </SafeAreaView>
@@ -296,6 +340,37 @@ const styles = StyleSheet.create({
     color: '#fff',
     marginVertical: 5,
     textAlign: 'left',
+  },
+  button: {
+    height: 35,
+    width: '100%',
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 10,
+    paddingHorizontal: 15,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 3},
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+  },
+  buttonText: {
+    fontSize: 16,
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  primaryButton: {
+    backgroundColor: '#4CAF50', // Green
+  },
+  secondaryButton: {
+    backgroundColor: '#F44336', // Red
+  },
+  buttonTextPrimary: {
+    color: '#fff',
+  },
+  buttonTextSecondary: {
+    color: '#fff',
   },
   resetButton: {
     position: 'absolute',
