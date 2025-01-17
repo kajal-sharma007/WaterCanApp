@@ -65,7 +65,7 @@ const EditTransactionScreen = ({route, navigation}) => {
   }, []);
 
   const validateFields = () => {
-    if (!amountPaid || isNaN(amountPaid) || parseFloat(amountPaid) <= 0) {
+    if (!amountPaid || isNaN(amountPaid) || parseFloat(amountPaid) < 0) {
       Snackbar.show({
         text: 'Please enter valid amount paid!',
         duration: Snackbar.LENGTH_SHORT,
