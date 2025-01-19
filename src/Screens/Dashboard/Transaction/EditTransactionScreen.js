@@ -48,6 +48,45 @@ const EditTransactionScreen = ({route, navigation}) => {
   const [txnDetails, setTxnDetails] = useState({});
   const [dropdownPosition, setDropdownPosition] = useState({top: 0});
   const inputRef = useRef();
+  const [lastTransactionDate, setLastTransactionDate] = useState(null);
+
+  useEffect(() => {
+    const fetchLastTransactionDate = async () => {
+      try {
+        const response = await fetch(
+          `http://${WIFI}/api/transaction-history?userId=${customerDetails.userId}`,
+        );
+        const data = await response.json();
+
+        if (
+          data.success &&
+          data.transactions &&
+          Array.isArray(data.transactions) &&
+          data.transactions.length > 0
+        ) {
+          const sortedTransactions = data.transactions.sort((a, b) => {
+            const dateA = new Date(a.dateTime.split('/').reverse().join('-'));
+            const dateB = new Date(b.dateTime.split('/').reverse().join('-'));
+            return dateB - dateA; // Sort in descending order (most recent first)
+          });
+          const lastTransaction = sortedTransactions[0];
+          const dateParts = lastTransaction.dateTime.split('/');
+          let month = dateParts[0]; // MM
+          let day = dateParts[1]; // DD
+          const year = dateParts[2]; // YYYY
+          if (parseInt(month) < 10) month = '0' + month;
+          if (parseInt(day) < 10) day = '0' + day;
+
+          const formattedDate = `${day}/${month}/${year}`;
+
+          setLastTransactionDate(formattedDate);
+        }
+      } catch (err) {
+        console.error('Error fetching transaction history for user:', err);
+      }
+    };
+    fetchLastTransactionDate();
+  }, [customerDetails.userId]); // Re-run effect when userId changes
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -243,6 +282,12 @@ ${txnData.transaction.combo
                       </Text>
                       <Text style={styles.customerDetails}>
                         Driver: {driverId}
+                      </Text>
+
+                      {/* Display Last Transaction Date */}
+                      <Text style={styles.customerDetails}>
+                        Last Transaction Date:{' '}
+                        {lastTransactionDate || 'No transaction history'}
                       </Text>
                     </Card.Content>
                   </Card>
