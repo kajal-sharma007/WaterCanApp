@@ -78,7 +78,7 @@ const Route = ({navigation, route}) => {
     GetLocation.getCurrentPosition({
       enableHighAccuracy: true,
       timeout: 5000,
-      maximumAge: 10000,
+      maximumAge: 20000,
     })
       .then(location => {
         setState(prevState => ({
