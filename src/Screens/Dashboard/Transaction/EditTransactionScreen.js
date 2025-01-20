@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import {
   View,
   Text,
@@ -11,23 +11,25 @@ import {
   Platform,
   TouchableWithoutFeedback,
   Keyboard,
+  Modal,
+  Linking,
   Button,
 } from 'react-native';
-import { Card } from 'react-native-paper';
-import { WIFI } from '../../constants/constants';
+import {Card} from 'react-native-paper';
+import {WIFI} from '../../constants/constants';
 import styles from './styles';
 import Snackbar from 'react-native-snackbar';
 
-const CustomButton = ({ title, onPress, backgroundColor, textColor }) => (
+const CustomButton = ({title, onPress, backgroundColor, textColor}) => (
   <TouchableOpacity
-    style={[styles.button, { backgroundColor }]}
+    style={[styles.button, {backgroundColor}]}
     onPress={onPress}>
-    <Text style={[styles.buttonText, { color: textColor }]}>{title}</Text>
+    <Text style={[styles.buttonText, {color: textColor}]}>{title}</Text>
   </TouchableOpacity>
 );
 
-const EditTransactionScreen = ({ route, navigation }) => {
-  const { customerDetails, driverId } = route.params;
+const EditTransactionScreen = ({route, navigation}) => {
+  const {customerDetails, driverId} = route.params;
   const [products, setProducts] = useState([]);
   const [productType, setProductType] = useState('');
   const [bottlesReceived, setBottlesReceived] = useState('');
@@ -42,7 +44,9 @@ const EditTransactionScreen = ({ route, navigation }) => {
   const [selectedItem, setSelectedItem] = useState('');
   const [chips, setChips] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [dropdownPosition, setDropdownPosition] = useState({ top: 0 });
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [txnDetails, setTxnDetails] = useState({});
+  const [dropdownPosition, setDropdownPosition] = useState({top: 0});
   const inputRef = useRef();
   const [lastTransactionDate, setLastTransactionDate] = useState(null);
 
@@ -82,7 +86,7 @@ const EditTransactionScreen = ({ route, navigation }) => {
       }
     };
     fetchLastTransactionDate();
-  }, [customerDetails.userId]);
+  }, [customerDetails.userId]); // Re-run effect when userId changes
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -121,7 +125,7 @@ const EditTransactionScreen = ({ route, navigation }) => {
     if (selectedItem && bottlesDelivered && bottlesReceived) {
       setCombo([
         ...combo,
-        { type: selectedItem, bottlesDelivered, bottlesReceived },
+        {type: selectedItem, bottlesDelivered, bottlesReceived},
       ]);
       const totalPrice =
         parseFloat(currentPrice) * parseFloat(bottlesDelivered);
@@ -160,8 +164,8 @@ const EditTransactionScreen = ({ route, navigation }) => {
         `http://${WIFI}/api/customers/${customerDetails.customer._id}/due-amount-update`,
         {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ newDueAmt }),
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({newDueAmt}),
         },
       );
       const responseData = await response.json();
@@ -170,38 +174,38 @@ const EditTransactionScreen = ({ route, navigation }) => {
         `http://${WIFI}/api/transaction/${customerDetails.customer.userId}`,
         {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {'Content-Type': 'application/json'},
           body: JSON.stringify(payload),
         },
       );
       const txnData = await txnResponse.json();
 
       if (txnData.success) {
-        // Commented out WhatsApp section
-        // const message = `
-        // *Transaction Successful:*
-        // *Customer:* ${customerDetails.name}
-        // *Amount Paid:* ${txnData.transaction.paymentTaken}
-        // *Due Amount:* ${txnData.transaction.dueAmount}
+        setTxnDetails(txnData.transaction);
+        setIsModalVisible(true);
 
-        // *Products and Bottles:* 
-        // ${txnData.transaction.combo
-        //   .map(
-        //     item =>
-        //       `- ${item.type} (Delivered: ${item.bottlesDelivered}, Received: ${bottlesReceived})`,
-        //   )
-        //   .join('\n')}
+        const message = `
+*Transaction Successful:*
+*Customer:* ${customerDetails.name}
+*Amount Paid:* ${txnData.transaction.paymentTaken}
+*Due Amount:* ${txnData.transaction.dueAmount}
 
-        // *Date:* ${txnData.transaction.dateTime}
-        // `;
-        // const url = `whatsapp://send?phone=${
-        //   customerDetails.phone
-        // }&text=${encodeURIComponent(message)}`;
-        // Linking.openURL(url).catch(err =>
-        //   console.error('Error sending message via WhatsApp', err),
-        // );
+*Products and Bottles:* 
+${txnData.transaction.combo
+  .map(
+    item =>
+      `- ${item.type} (Delivered: ${item.bottlesDelivered}, Received: ${bottlesReceived})`,
+  )
+  .join('\n')}
 
-        alert('Transaction successful');
+*Date:* ${txnData.transaction.dateTime}
+`;
+        const url = `whatsapp://send?phone=${
+          customerDetails.phone
+        }&text=${encodeURIComponent(message)}`;
+        Linking.openURL(url).catch(err =>
+          console.error('Error sending message via WhatsApp', err),
+        );
       }
 
       if (responseData.success) {
@@ -215,6 +219,11 @@ const EditTransactionScreen = ({ route, navigation }) => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const closeModal = () => {
+    setIsModalVisible(false);
+    navigation.goBack();
   };
 
   const resetFields = () => {
@@ -236,8 +245,8 @@ const EditTransactionScreen = ({ route, navigation }) => {
   };
 
   const handleInputLayout = event => {
-    const { y } = event.nativeEvent.layout;
-    setDropdownPosition({ top: y + 45 });
+    const {y} = event.nativeEvent.layout;
+    setDropdownPosition({top: y + 45});
   };
 
   return (
@@ -245,9 +254,10 @@ const EditTransactionScreen = ({ route, navigation }) => {
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={styles.innerContainer}>
           <KeyboardAvoidingView
-            style={{ flex: 1 }}
+            style={{flex: 1}}
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
             <ScrollView contentContainerStyle={styles.scrollViewContent}>
+              {!showTxnData ? (
                 <View style={styles.formContainer}>
                   <Text style={styles.title}>Edit Transaction</Text>
                   <Card style={styles.card}>
@@ -296,7 +306,7 @@ const EditTransactionScreen = ({ route, navigation }) => {
                     <View
                       style={[
                         styles.dropdownContainer,
-                        { top: dropdownPosition.top },
+                        {top: dropdownPosition.top},
                       ]}>
                       {products.length > 0 ? (
                         products.map(item => (
@@ -388,6 +398,37 @@ const EditTransactionScreen = ({ route, navigation }) => {
                     />
                   </View>
                 </View>
+              ) : isLoading ? (
+                <View style={styles.processTxn}>
+                  <ActivityIndicator size="large" color="#0000ff" />
+                  <Text>Transaction processing...</Text>
+                </View>
+              ) : (
+                <Modal
+                  visible={isModalVisible}
+                  animationType="slide"
+                  transparent={true}
+                  onRequestClose={closeModal}>
+                  <View style={styles.modalBackground}>
+                    <View style={styles.modalContainer}>
+                      <Text style={styles.modalTitle}>
+                        Transaction Successful
+                      </Text>
+                      <Text>Transaction Date: {txnDetails.dateTime}</Text>
+                      <Text>Amount Paid: {txnDetails.paymentTaken}</Text>
+                      <Text>Due Amount: {txnDetails.dueAmount}</Text>
+                      <Text>Products:</Text>
+                      {txnDetails.combo &&
+                        txnDetails.combo.map((item, index) => (
+                          <Text key={index}>
+                            {item.type} (Delivered: {item.bottlesDelivered})
+                          </Text>
+                        ))}
+                      <Button title="Close" onPress={closeModal} />
+                    </View>
+                  </View>
+                </Modal>
+              )}
             </ScrollView>
           </KeyboardAvoidingView>
         </View>
