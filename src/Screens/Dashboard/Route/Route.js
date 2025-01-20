@@ -141,7 +141,7 @@ const Route = ({navigation, route}) => {
           [index]: timestamp,
         },
       }));
-    }, 10000);
+    }, Number.MAX_SAFE_INTEGER); // Effectively makes the timeout 'unlimited'
   };
 
   const zoomToFitRoute = coordinates => {
