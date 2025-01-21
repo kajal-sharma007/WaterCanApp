@@ -29,7 +29,7 @@ const CustomButton = ({title, onPress, backgroundColor, textColor}) => (
 );
 
 const EditTransactionScreen = ({route, navigation}) => {
-  const {customerDetails, driverId} = route.params;
+  const {customerDetails, driverId, userId} = route.params;
   const [products, setProducts] = useState([]);
   const [productType, setProductType] = useState('');
   const [bottlesReceived, setBottlesReceived] = useState('');
@@ -93,13 +93,21 @@ const EditTransactionScreen = ({route, navigation}) => {
       try {
         const response = await fetch(`http://${WIFI}/api/getAllProducts`);
         const data = await response.json();
-        setProducts(data && Array.isArray(data) ? data : []);
+    
+        if (data && Array.isArray(data)) {
+          const filteredProducts = data.filter(product => product.userId === userId);
+          setProducts(filteredProducts);
+        } else {
+          setProducts([]); // Set an empty array if the data is not in the expected format
+          console.error('API response is not in the expected format:', data);
+        }
       } catch (err) {
         console.error('Error fetching products:', err);
         alert(`Error fetching products: ${err.message}`);
         setProducts([]);
       }
     };
+    
     fetchProducts();
   }, []);
 

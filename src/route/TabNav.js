@@ -14,7 +14,7 @@ import user from '../assets/Svg/user.png';
 const Tab = createBottomTabNavigator();
 
 const TabNavigator = ({ route }) => {
-  const { driverId } = route.params;
+  const { driverId, userId } = route.params;
 
   // Handle the Android back button press
   useEffect(() => {
@@ -68,7 +68,7 @@ const TabNavigator = ({ route }) => {
       <Tab.Screen
         name="Home"
         component={Home}
-        initialParams={{ driverId }} // Pass driverId to the Home screen
+        initialParams={{ driverId, userId }} // Pass driverId to the Home screen
         options={{
           tabBarIcon: () => (
             <Image
@@ -81,7 +81,7 @@ const TabNavigator = ({ route }) => {
       <Tab.Screen
         name="Route"
         component={Route}
-        initialParams={{ driverId }} // Pass driverId to the Route screen
+        initialParams={{ driverId, userId }} // Pass driverId to the Route screen
         options={{
           tabBarIcon: () => (
             <Image
@@ -94,7 +94,7 @@ const TabNavigator = ({ route }) => {
       <Tab.Screen
         name="Add Customer"
         component={AddCustomer}
-        initialParams={{ driverId }} // Pass driverId to the AddCustomer screen
+        initialParams={{ driverId, userId }} // Pass driverId to the AddCustomer screen
         options={{
           tabBarIcon: () => (
             <Image
@@ -107,7 +107,7 @@ const TabNavigator = ({ route }) => {
       <Tab.Screen
         name="Profile"
         component={Profile}
-        initialParams={{ driverId }} // Pass driverId to the Profile screen
+        initialParams={{ driverId, userId }} // Pass driverId to the Profile screen
         options={{
           tabBarIcon: () => (
             <Image

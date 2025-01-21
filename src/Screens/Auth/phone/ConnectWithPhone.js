@@ -138,8 +138,9 @@ const ConnectWithPhone = () => {
 
       const data = await response.json();
       const driverId = data.driver._id;
+      const userId = data.driver.userId;
       console.log('Driver verified:', data);
-      navigation.replace('TabNav', { driverId });
+      navigation.replace('TabNav', { driverId, userId });
     } catch (error) {
       console.error('Network error:', error);
       Snackbar.show({

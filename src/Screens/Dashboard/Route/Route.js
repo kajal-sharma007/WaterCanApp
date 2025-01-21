@@ -39,7 +39,7 @@ const Route = ({navigation, route}) => {
 
   const mapRef = useRef(null);
   const refRBSheet = useRef();
-  const {driverId} = route.params;
+  const { driverId, userId } = route.params;
 
   useEffect(() => {
     const fetchRoutes = async () => {
@@ -302,6 +302,7 @@ const Route = ({navigation, route}) => {
               navigation.navigate('EditTransactionScreen', {
                 customerDetails: state.selectedDropDetails?.details,
                 driverId: driverId,
+                userId: userId,
               });
             }}>
             <Text style={styles.buttonText}>Edit Transaction</Text>
