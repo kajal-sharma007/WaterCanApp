@@ -222,7 +222,7 @@ const Route = ({navigation, route}) => {
           <Marker
             coordinate={state.pickupCords}
             title="Pickup"
-            image={imagePath.icBike}
+            image={imagePath.noTruck}
           />
 
           {state.selectedDropCords.map((drop, index) => (
