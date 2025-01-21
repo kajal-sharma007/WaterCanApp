@@ -109,7 +109,7 @@ const EditTransactionScreen = ({route, navigation}) => {
     };
     
     fetchProducts();
-  }, []);
+  }, [userId]);
 
   const validateFields = () => {
     if (!amountPaid || isNaN(amountPaid) || parseFloat(amountPaid) < 0) {
