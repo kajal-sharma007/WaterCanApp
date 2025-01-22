@@ -234,7 +234,7 @@ const AddCustomer = ({ route }) => {
 
   setIsLoading(true);
   try {
-    const response = await fetch(`http://${WIFI}/api/customers/to/${driverId}`, {
+    const response = await fetch(`http://${WIFI}/api/customers/to/${selectedAdminId}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
