@@ -10,12 +10,12 @@ import {
 } from 'react-native';
 import MapView, {Marker} from 'react-native-maps';
 import MapViewDirections from 'react-native-maps-directions';
+import {YOUR_GOOGLE_MAPS_API_KEY} from '../../constants/constants';
 import imagePath from '../../constants/imagePath';
 import GetLocation from 'react-native-get-location';
 import {WIFI} from '../../constants/constants';
 import RouteStyles from './Styles';
 import RBSheet from 'react-native-raw-bottom-sheet';
-const YOUR_GOOGLE_MAPS_API_KEY = process.env.REACT_APP_MAP_KEY;
 
 const Route = ({navigation, route}) => {
   const [state, setState] = useState({
@@ -39,7 +39,7 @@ const Route = ({navigation, route}) => {
 
   const mapRef = useRef(null);
   const refRBSheet = useRef();
-  const { driverId, userId } = route.params;
+  const {driverId, userId} = route.params;
 
   useEffect(() => {
     const fetchRoutes = async () => {
@@ -141,7 +141,7 @@ const Route = ({navigation, route}) => {
           [index]: timestamp,
         },
       }));
-    },10000); 
+    }, 10000);
   };
 
   const zoomToFitRoute = coordinates => {
