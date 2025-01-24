@@ -93,9 +93,11 @@ const EditTransactionScreen = ({route, navigation}) => {
       try {
         const response = await fetch(`http://${WIFI}/api/getAllProducts`);
         const data = await response.json();
-    
+
         if (data && Array.isArray(data)) {
-          const filteredProducts = data.filter(product => product.userId === userId);
+          const filteredProducts = data.filter(
+            product => product.userId === userId,
+          );
           setProducts(filteredProducts);
         } else {
           setProducts([]); // Set an empty array if the data is not in the expected format
@@ -107,7 +109,7 @@ const EditTransactionScreen = ({route, navigation}) => {
         setProducts([]);
       }
     };
-    
+
     fetchProducts();
   }, [userId]);
 
@@ -259,12 +261,12 @@ ${txnData.transaction.combo
 
   return (
     <SafeAreaView style={styles.container}>
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <View style={styles.innerContainer}>
-          <KeyboardAvoidingView
-            style={{flex: 1}}
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-            <ScrollView contentContainerStyle={styles.scrollViewContent}>
+      <ScrollView contentContainerStyle={{flexGrow: 1}}>
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <View style={styles.innerContainer}>
+            <KeyboardAvoidingView
+              style={{flex: 1}}
+              behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
               {!showTxnData ? (
                 <View style={styles.formContainer}>
                   <Text style={styles.title}>Edit Transaction</Text>
@@ -437,10 +439,10 @@ ${txnData.transaction.combo
                   </View>
                 </Modal>
               )}
-            </ScrollView>
-          </KeyboardAvoidingView>
-        </View>
-      </TouchableWithoutFeedback>
+            </KeyboardAvoidingView>
+          </View>
+        </TouchableWithoutFeedback>
+      </ScrollView>
     </SafeAreaView>
   );
 };
